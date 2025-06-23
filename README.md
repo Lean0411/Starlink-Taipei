@@ -92,7 +92,7 @@ conda env create -f environment.yml
 conda activate starlink-analysis
 
 # 或使用 pip
-pip install -r requirements/requirements.txt
+pip install -r requirements.txt
 ```
 
 3. **安裝 R 套件**
@@ -112,6 +112,15 @@ python starlink.py shiny --port 8080 --host 0.0.0.0
 ```
 
 啟動成功後，在瀏覽器中訪問：**http://localhost:3838**
+
+### 使用 Docker (推薦)
+
+如果你的環境中已安裝 Docker 和 Docker Compose，你可以使用以下指令一鍵啟動完整應用：
+
+```bash
+docker-compose up --build
+```
+應用將會在背景啟動，並同樣可以透過 **http://localhost:3838** 訪問。
 
 ## 💡 使用說明
 
@@ -154,6 +163,30 @@ python starlink.py shiny --port 8080 --host 0.0.0.0
 - **`coverage_report.html`**：完整視覺化報告
 - **`*.png`**：高解析度圖表檔案
 
+## 📂 專案結構
+
+```
+Starlink-Taipei/
+├── app/                  # Shiny 應用程式核心目錄
+│   ├── api/              # API 相關模組
+│   └── services/         # 後端服務 (預測、R整合)
+├── R/                    # R 語言分析與繪圖腳本
+├── config/               # 專案設定檔
+├── data/                 # 原始數據與 TLE 檔案
+├── docs/                 # 專案文件
+├── output/               # 分析結果輸出目錄
+├── scripts/              # 資料搜集與分析腳本
+├── requirements/         # Python 環境依賴 (分環境)
+├── app.R                 # Shiny App 進入點
+├── server.R              # Shiny Server 邏輯
+├── ui.R                  # Shiny UI 定義
+├── starlink.py           # Python 核心分析腳本與 CLI
+├── environment.yml       # Conda 環境設定檔
+├── requirements.txt      # Python 主要依賴
+├── Dockerfile            # Docker 映像檔設定
+└── docker-compose.yml    # Docker Compose 設定
+```
+
 ## 🛠️ 技術架構
 
 ### 後端技術
@@ -169,6 +202,10 @@ python starlink.py shiny --port 8080 --host 0.0.0.0
 - **shinydashboard**：現代化 Dashboard 界面
 - **plotly.js**：互動式圖表渲染
 - **Bootstrap**：響應式 UI 設計
+
+### 容器化
+
+- **Docker/Docker Compose**: 用於建立一致且可移植的應用程式環境。
 
 ### 數據來源
 
