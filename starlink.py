@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2025 Starlink Taipei Analysis Team
+#
+# This file is part of the Starlink Taipei Satellite Analysis System.
 
 """
 🛰️ Starlink 台北衛星分析系統 - 主命令行工具
