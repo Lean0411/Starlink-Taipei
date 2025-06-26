@@ -1,3 +1,8 @@
+# MIT License
+# Copyright (c) 2025 Starlink Taipei Analysis Team
+#
+# This file is part of the Starlink Taipei Satellite Analysis System.
+
 # quick_start.R
 # Starlink 台北衛星分析系統 - 統一簡化啟動腳本
 

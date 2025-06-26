@@ -1,3 +1,8 @@
+# MIT License
+# Copyright (c) 2025 Starlink Taipei Analysis Team
+#
+# This file is part of the Starlink Taipei Satellite Analysis System.
+
 # Starlink 台北衛星分析系統啟動腳本
 cat("正在啟動 Starlink 台北衛星分析系統...\n")
 
