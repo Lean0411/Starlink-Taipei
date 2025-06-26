@@ -1,3 +1,8 @@
+# MIT License
+# Copyright (c) 2025 Starlink Taipei Analysis Team
+#
+# This file is part of the Starlink Taipei Satellite Analysis System.
+
 # server.R
 # Starlink 台北衛星分析與預測系統 v2.0 - Shiny Server
 

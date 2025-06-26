@@ -1,3 +1,8 @@
+# MIT License
+# Copyright (c) 2025 Starlink Taipei Analysis Team
+#
+# This file is part of the Starlink Taipei Satellite Analysis System.
+
 # 簡化版 Starlink 台北衛星分析系統測試
 library(shiny)
 library(shinydashboard)

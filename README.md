@@ -291,7 +291,44 @@ curl -I https://celestrak.org/
 
 ## 📄 授權條款
 
-本專案採用 MIT 授權條款。詳見 [LICENSE](LICENSE) 檔案。
+本專案採用 **MIT 授權條款** - 最寬鬆和友好的開源授權之一。
+
+### MIT 授權核心要點
+
+- ✅ **商業使用**：可自由用於商業項目
+- ✅ **修改**：可根據需求修改代碼
+- ✅ **分發**：可自由分發修改後的版本
+- ✅ **私有使用**：可用於私有項目
+- ⚠️ **責任限制**：軟體按「現狀」提供，無任何擔保
+- 📋 **條件**：需保留版權聲明和授權聲明
+
+### 授權聲明
+
+```
+MIT License
+
+Copyright (c) 2025 Starlink Taipei Analysis Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+詳見 [LICENSE](LICENSE) 檔案以獲取完整授權條款。
 
 ## 📧 聯絡資訊
 

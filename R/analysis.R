@@ -1,3 +1,8 @@
+# MIT License
+# Copyright (c) 2025 Starlink Taipei Analysis Team
+#
+# This file is part of the Starlink Taipei Satellite Analysis System.
+
 # R/analysis.R
 # Starlink 分析 R 模組
 # 使用 reticulate 調用 Python 分析功能
