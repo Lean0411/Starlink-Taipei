@@ -4,29 +4,36 @@
 # This file is part of the Starlink Taipei Satellite Analysis System.
 
 """
-satellite_analysis.py 的單元測試
+satellite_analysis.py 的單元測試（修復版）
 """
 
 import pytest
 import json
 import os
+import sys
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta, timezone
 
-# 由於 satellite_analysis 有許多依賴，我們需要先 mock 它們
-with patch('skyfield.api.load'):
-    with patch('skyfield.api.wgs84'):
-        with patch('skyfield.api.EarthSatellite'):
-            import satellite_analysis
+# 添加專案路徑到 Python 路徑
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 
 class TestSatelliteAnalysis:
     """測試衛星分析核心功能"""
     
     @pytest.mark.unit
-    def test_process_time_point_worker_with_visible_satellite(self, mock_observer_location):
+    @patch('satellite_analysis.wgs84')
+    @patch('satellite_analysis.load')
+    @patch('satellite_analysis.EarthSatellite')
+    def test_process_time_point_worker_with_visible_satellite(self, mock_earth_satellite, mock_load, mock_wgs84, mock_observer_location):
         """測試當有可見衛星時的處理"""
+        # 導入模組（在 patch 之後）
+        import satellite_analysis
+        
         # 準備測試數據
+        mock_ts = MagicMock()
+        mock_load.timescale.return_value = mock_ts
+        
         mock_time = MagicMock()
         time_datetime = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         time_data = (mock_time, time_datetime)
@@ -39,6 +46,11 @@ class TestSatelliteAnalysis:
         # Mock 衛星物件
         mock_sat = MagicMock()
         mock_sat.name = "STARLINK-TEST"
+        mock_earth_satellite.return_value = mock_sat
+        
+        # Mock 觀測者位置
+        mock_observer = MagicMock()
+        mock_wgs84.latlon.return_value = mock_observer
         
         # Mock 位置計算
         mock_topocentric = MagicMock()
@@ -50,35 +62,46 @@ class TestSatelliteAnalysis:
         mock_distance.km = 550.0
         mock_topocentric.altaz.return_value = (mock_alt, mock_az, mock_distance)
         
-        with patch('skyfield.api.EarthSatellite', return_value=mock_sat):
-            with patch('skyfield.api.wgs84.latlon') as mock_latlon:
-                mock_observer = MagicMock()
-                mock_latlon.return_value = mock_observer
-                
-                mock_difference = MagicMock()
-                mock_difference.at.return_value = mock_topocentric
-                mock_sat.__sub__.return_value = mock_difference
-                
-                # 執行測試
-                result = satellite_analysis.process_time_point_worker(
-                    time_data,
-                    tle_list,
-                    mock_observer_location['latitude'],
-                    mock_observer_location['longitude'], 
-                    mock_observer_location['elevation'],
-                    None,
-                    min_elevation_threshold=25
-                )
-                
-                # 驗證結果
-                assert len(result['visible_satellites']) == 1
-                assert result['visible_satellites'][0]['name'] == "STARLINK-TEST"
-                assert result['visible_satellites'][0]['elevation'] == 45.0
-                assert result['count'] == 1
+        mock_difference = MagicMock()
+        mock_difference.at.return_value = mock_topocentric
+        mock_sat.__sub__.return_value = mock_difference
+        
+        # Mock geocentric 和 subpoint
+        mock_geocentric = MagicMock()
+        mock_sat.at.return_value = mock_geocentric
+        mock_wgs84.subpoint.return_value = MagicMock()
+        
+        # 執行測試
+        result = satellite_analysis.process_time_point_worker(
+            time_data,
+            tle_list,
+            mock_observer_location['latitude'],
+            mock_observer_location['longitude'], 
+            mock_observer_location['elevation'],
+            None,
+            min_elevation_threshold=25
+        )
+        
+        # 驗證結果
+        assert 'visible_satellites' in result
+        assert 'visible_count' in result
+        assert result['visible_count'] == 1
+        assert len(result['visible_satellites']) == 1
+        assert result['visible_satellites'][0]['name'] == "STARLINK-TEST"
+        assert result['visible_satellites'][0]['elevation'] == 45.0
 
     @pytest.mark.unit
-    def test_process_time_point_worker_no_visible_satellites(self, mock_observer_location):
+    @patch('satellite_analysis.wgs84')
+    @patch('satellite_analysis.load')
+    @patch('satellite_analysis.EarthSatellite')
+    def test_process_time_point_worker_no_visible_satellites(self, mock_earth_satellite, mock_load, mock_wgs84, mock_observer_location):
         """測試當沒有可見衛星時的處理"""
+        # 導入模組
+        import satellite_analysis
+        
+        mock_ts = MagicMock()
+        mock_load.timescale.return_value = mock_ts
+        
         mock_time = MagicMock()
         time_datetime = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         time_data = (mock_time, time_datetime)
@@ -89,6 +112,10 @@ class TestSatelliteAnalysis:
         
         mock_sat = MagicMock()
         mock_sat.name = "STARLINK-TEST"
+        mock_earth_satellite.return_value = mock_sat
+        
+        mock_observer = MagicMock()
+        mock_wgs84.latlon.return_value = mock_observer
         
         # Mock 低仰角（不可見）
         mock_topocentric = MagicMock()
@@ -100,135 +127,133 @@ class TestSatelliteAnalysis:
         mock_distance.km = 550.0
         mock_topocentric.altaz.return_value = (mock_alt, mock_az, mock_distance)
         
-        with patch('skyfield.api.EarthSatellite', return_value=mock_sat):
-            with patch('skyfield.api.wgs84.latlon') as mock_latlon:
-                mock_observer = MagicMock()
-                mock_latlon.return_value = mock_observer
-                
-                mock_difference = MagicMock()
-                mock_difference.at.return_value = mock_topocentric
-                mock_sat.__sub__.return_value = mock_difference
-                
-                result = satellite_analysis.process_time_point_worker(
-                    time_data,
-                    tle_list,
-                    mock_observer_location['latitude'],
-                    mock_observer_location['longitude'],
-                    mock_observer_location['elevation'],
-                    None,
-                    min_elevation_threshold=25
-                )
-                
-                assert len(result['visible_satellites']) == 0
-                assert result['count'] == 0
-
-    @pytest.mark.unit
-    def test_download_tle_data_success(self, temp_output_dir, sample_tle_data):
-        """測試成功下載 TLE 數據"""
-        with patch('requests.get') as mock_get:
-            mock_response = MagicMock()
-            mock_response.text = sample_tle_data
-            mock_response.raise_for_status = MagicMock()
-            mock_get.return_value = mock_response
-            
-            # 執行下載
-            tle_file = os.path.join(temp_output_dir, "test.tle")
-            with patch('satellite_analysis.OUTPUT_DIR', temp_output_dir):
-                satellite_analysis.download_tle_data(tle_file)
-            
-            # 驗證文件內容
-            assert os.path.exists(tle_file)
-            with open(tle_file, 'r') as f:
-                content = f.read()
-            assert "STARLINK-1007" in content
-
-    @pytest.mark.unit
-    def test_download_tle_data_network_error(self, temp_output_dir):
-        """測試網路錯誤時的處理"""
-        with patch('requests.get') as mock_get:
-            mock_get.side_effect = Exception("Network error")
-            
-            tle_file = os.path.join(temp_output_dir, "test.tle")
-            
-            # 應該引發異常
-            with pytest.raises(Exception, match="Network error"):
-                satellite_analysis.download_tle_data(tle_file)
-
-    @pytest.mark.unit 
-    def test_parse_tle_data(self, sample_tle_data):
-        """測試 TLE 數據解析"""
-        lines = sample_tle_data.strip().split('\n')
+        mock_difference = MagicMock()
+        mock_difference.at.return_value = mock_topocentric
+        mock_sat.__sub__.return_value = mock_difference
         
-        # 假設有 parse_tle_data 函數
-        # 這裡需要根據實際實現調整
-        satellites = []
-        for i in range(0, len(lines), 3):
-            if i + 2 < len(lines):
-                satellites.append({
-                    'name': lines[i].strip(),
-                    'line1': lines[i+1].strip(),
-                    'line2': lines[i+2].strip()
-                })
+        mock_geocentric = MagicMock()
+        mock_sat.at.return_value = mock_geocentric
+        mock_wgs84.subpoint.return_value = MagicMock()
         
-        assert len(satellites) == 3
-        assert satellites[0]['name'] == "STARLINK-1007"
-        assert satellites[1]['name'] == "STARLINK-1008"
-        assert satellites[2]['name'] == "STARLINK-1009"
-
-    @pytest.mark.unit
-    def test_calculate_coverage_statistics(self):
-        """測試覆蓋率統計計算"""
-        # 準備測試數據
-        time_results = [
-            {'count': 5, 'timestamp': '2024-01-01 12:00:00'},
-            {'count': 0, 'timestamp': '2024-01-01 12:01:00'},
-            {'count': 3, 'timestamp': '2024-01-01 12:02:00'},
-            {'count': 7, 'timestamp': '2024-01-01 12:03:00'},
-            {'count': 0, 'timestamp': '2024-01-01 12:04:00'},
-        ]
-        
-        # 計算統計
-        total_points = len(time_results)
-        covered_points = sum(1 for r in time_results if r['count'] > 0)
-        coverage_percentage = (covered_points / total_points) * 100
-        avg_satellites = sum(r['count'] for r in time_results) / total_points
-        max_satellites = max(r['count'] for r in time_results)
+        # 執行測試
+        result = satellite_analysis.process_time_point_worker(
+            time_data,
+            tle_list,
+            mock_observer_location['latitude'],
+            mock_observer_location['longitude'],
+            mock_observer_location['elevation'],
+            None,
+            min_elevation_threshold=25
+        )
         
         # 驗證結果
-        assert coverage_percentage == 60.0  # 3/5 * 100
-        assert avg_satellites == 3.0  # (5+0+3+7+0)/5
-        assert max_satellites == 7
+        assert result['visible_count'] == 0
+        assert len(result['visible_satellites']) == 0
 
-    @pytest.mark.unit
-    @patch('matplotlib.pyplot.savefig')
-    def test_create_coverage_plot(self, mock_savefig, temp_output_dir):
-        """測試覆蓋圖表生成"""
-        # 這個測試需要根據實際的繪圖函數調整
-        # 主要測試函數是否被正確調用
-        
-        time_results = [
-            {'count': 5, 'timestamp': '2024-01-01 12:00:00'},
-            {'count': 3, 'timestamp': '2024-01-01 12:01:00'},
-        ]
-        
-        # 假設有 create_coverage_plot 函數
-        # mock_savefig 應該被調用
-        assert True  # 佔位符
 
+class TestStarlinkAnalysisClass:
+    """測試 StarlinkAnalysis 類別"""
+    
     @pytest.mark.unit
-    def test_main_function_with_args(self):
-        """測試主函數參數解析"""
-        test_args = [
-            'satellite_analysis.py',
-            '--duration', '30',
-            '--interval', '2.0',
-            '--min_elevation', '30.0',
-            '--lat', '40.7128',
-            '--lon', '-74.0060'
-        ]
-        
-        with patch('sys.argv', test_args):
-            with patch('satellite_analysis.analyze_satellite_coverage') as mock_analyze:
-                # 測試參數是否正確傳遞
-                # 需要根據實際的 main 函數實現調整
-                assert True  # 佔位符
+    def test_init(self, temp_output_dir):
+        """測試初始化"""
+        with patch('satellite_analysis.load') as mock_load:
+            with patch('satellite_analysis.wgs84') as mock_wgs84:
+                with patch('satellite_analysis.Loader'):
+                    import satellite_analysis
+                    
+                    # 創建實例
+                    analyzer = satellite_analysis.StarlinkAnalysis(output_dir=temp_output_dir)
+                    
+                    # 驗證
+                    assert analyzer.output_dir.exists()
+                    assert analyzer.satellites == []
+                    assert analyzer.raw_tle_data == []
+                    mock_load.timescale.assert_called_once()
+    
+    @pytest.mark.unit
+    def test_calculate_stats_basic(self, sample_coverage_df):
+        """測試基本統計計算"""
+        with patch('satellite_analysis.load'):
+            with patch('satellite_analysis.wgs84'):
+                with patch('satellite_analysis.Loader'):
+                    import satellite_analysis
+                    
+                    analyzer = satellite_analysis.StarlinkAnalysis()
+                    stats = analyzer.calculate_stats(sample_coverage_df)
+                    
+                    assert 'avg_visible_satellites' in stats
+                    assert 'max_visible_satellites' in stats
+                    assert 'min_visible_satellites' in stats
+                    assert 'coverage_percentage' in stats
+                    assert stats['avg_visible_satellites'] == pytest.approx(25.0, 0.1)
+                    assert stats['max_visible_satellites'] == 30
+                    assert stats['min_visible_satellites'] == 20
+    
+    @pytest.mark.unit
+    def test_calculate_stats_empty_dataframe(self):
+        """測試空 DataFrame 的統計計算"""
+        with patch('satellite_analysis.load'):
+            with patch('satellite_analysis.wgs84'):
+                with patch('satellite_analysis.Loader'):
+                    import satellite_analysis
+                    import pandas as pd
+                    
+                    analyzer = satellite_analysis.StarlinkAnalysis()
+                    empty_df = pd.DataFrame()
+                    stats = analyzer.calculate_stats(empty_df)
+                    
+                    assert stats['avg_visible_satellites'] == 0
+                    assert stats['max_visible_satellites'] == 0
+                    assert stats['min_visible_satellites'] == 0
+                    assert stats['coverage_percentage'] == 0
+
+
+class TestModuleLevelFunctions:
+    """測試模組層級的函數"""
+    
+    @pytest.mark.unit
+    @patch('requests.get')
+    def test_download_tle_data_success(self, mock_get, temp_output_dir):
+        """測試成功下載 TLE 數據"""
+        with patch('satellite_analysis.load'):
+            with patch('satellite_analysis.wgs84'):
+                with patch('satellite_analysis.EarthSatellite'):
+                    import satellite_analysis
+                    
+                    # Mock 回應
+                    mock_response = Mock()
+                    mock_response.status_code = 200
+                    mock_response.text = """STARLINK-1
+1 44713U 19074A   24001.50000000  .00000000  00000-0  00000-0 0  0000
+2 44713  53.0540 123.4567 0001234 123.4567 234.5678 15.40000000000000
+STARLINK-2
+1 44714U 19074B   24001.50000000  .00000000  00000-0  00000-0 0  0000
+2 44714  53.0540 123.4567 0001234 123.4567 234.5678 15.40000000000000"""
+                    mock_get.return_value = mock_response
+                    
+                    analyzer = satellite_analysis.StarlinkAnalysis(output_dir=temp_output_dir)
+                    analyzer.download_tle_data()
+                    
+                    # 驗證
+                    assert len(analyzer.satellites) == 2
+                    assert len(analyzer.raw_tle_data) == 2
+                    assert (temp_output_dir / 'starlink_latest.tle').exists()
+    
+    @pytest.mark.unit
+    @patch('requests.get')
+    def test_download_tle_data_failure(self, mock_get, temp_output_dir):
+        """測試下載 TLE 數據失敗"""
+        with patch('satellite_analysis.load'):
+            with patch('satellite_analysis.wgs84'):
+                import satellite_analysis
+                
+                # Mock 失敗回應
+                mock_get.side_effect = Exception("Network error")
+                
+                analyzer = satellite_analysis.StarlinkAnalysis(output_dir=temp_output_dir)
+                analyzer.download_tle_data()
+                
+                # 驗證
+                assert len(analyzer.satellites) == 0
+                assert len(analyzer.raw_tle_data) == 0

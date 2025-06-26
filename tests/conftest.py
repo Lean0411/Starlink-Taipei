@@ -94,3 +94,17 @@ def mock_datetime(monkeypatch):
     
     monkeypatch.setattr('datetime.datetime', MockDatetime)
     yield MockDatetime
+
+
+@pytest.fixture
+def sample_coverage_df():
+    """提供範例覆蓋率 DataFrame"""
+    import pandas as pd
+    data = {
+        'timestamp': pd.date_range('2024-01-01 12:00:00', periods=10, freq='1min'),
+        'visible_count': [25, 30, 20, 25, 30, 20, 25, 30, 20, 25],
+        'elevation': [45.0, 50.0, 40.0, 45.0, 50.0, 40.0, 45.0, 50.0, 40.0, 45.0],
+        'azimuth': [180.0, 190.0, 170.0, 180.0, 190.0, 170.0, 180.0, 190.0, 170.0, 180.0],
+        'distance_km': [550.0, 500.0, 600.0, 550.0, 500.0, 600.0, 550.0, 500.0, 600.0, 550.0]
+    }
+    return pd.DataFrame(data)
