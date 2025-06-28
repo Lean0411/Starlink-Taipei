@@ -113,4 +113,7 @@ starlink_latest.tle
 # Log files
 *.log
 app.log
-run.logbin/
+run.log
+
+# Binary files
+bin/
