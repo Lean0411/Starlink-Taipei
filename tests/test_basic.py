@@ -17,7 +17,8 @@ def test_import_main_module():
     """測試主模組可以被導入"""
     import satellite_analysis
     assert satellite_analysis is not None
-    assert hasattr(satellite_analysis, 'StarlinkAnalysis')
+    assert hasattr(satellite_analysis, 'analyze_satellite_coverage')
+    assert hasattr(satellite_analysis, 'process_time_point_worker')
 
 def test_constants():
     """測試常數定義"""
