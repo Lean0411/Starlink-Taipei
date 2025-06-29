@@ -1,0 +1,17 @@
+# 開發環境配置
+# 繼承 base.yaml 並覆蓋特定設定
+
+app:
+  debug: true
+
+logging:
+  level: "DEBUG"
+
+api:
+  # 開發環境可能使用不同的端口
+  port: 8000
+  
+satellite:
+  celestrak:
+    # 開發環境可能使用較短的快取時間
+    cache_duration_hours: 1

@@ -1,0 +1,40 @@
+# 基礎配置檔案
+app:
+  name: "Starlink Taipei Satellite Analysis"
+  version: "2.0.0"
+  debug: false
+
+satellite:
+  # Celestrak API 設定
+  celestrak:
+    url: "https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle"
+    cache_duration_hours: 24
+    cache_dir: "data"
+  
+  # 預設分析參數
+  default_analysis:
+    duration_minutes: 60
+    interval_minutes: 1
+    min_elevation: 25.0
+
+observer:
+  # 預設觀測位置（台北）
+  default:
+    name: "台北觀測站"
+    latitude: 25.0330
+    longitude: 121.5654
+    elevation: 10.0
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors:
+    allow_origins: ["*"]
+    allow_credentials: true
+    allow_methods: ["*"]
+    allow_headers: ["*"]
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/app.log"
