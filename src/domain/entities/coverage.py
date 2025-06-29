@@ -11,6 +11,21 @@ from .observer import Observer
 
 
 @dataclass
+class CoverageWindow:
+    """衛星覆蓋視窗"""
+    
+    satellite_id: str
+    start_time: datetime
+    end_time: datetime
+    max_elevation: float
+    
+    @property
+    def duration_minutes(self) -> float:
+        """覆蓋持續時間（分鐘）"""
+        return (self.end_time - self.start_time).total_seconds() / 60.0
+
+
+@dataclass
 class SatelliteVisibility:
     """單個衛星的可見性資訊"""
 
@@ -60,20 +75,26 @@ class Coverage:
     """覆蓋率分析結果實體
 
     Attributes:
-        coverage_id: 覆蓋分析唯一識別碼
-        observer: 觀測者
+        observer_name: 觀測者名稱
         start_time: 分析開始時間
         end_time: 分析結束時間
+        elevation_mask: 最小仰角限制
+        coverage_windows: 覆蓋視窗列表
         snapshots: 時間序列快照
         metadata: 額外的元資料
     """
 
-    coverage_id: str
-    observer: Observer
+    observer_name: str
     start_time: datetime
     end_time: datetime
+    elevation_mask: float = 25.0
+    coverage_windows: List[CoverageWindow] = field(default_factory=list)
     snapshots: List[CoverageSnapshot] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def add_coverage_window(self, window: CoverageWindow) -> None:
+        """添加覆蓋視窗"""
+        self.coverage_windows.append(window)
 
     @property
     def duration_minutes(self) -> float:
@@ -115,19 +136,22 @@ class Coverage:
         Returns:
             Dict: 統計資訊字典
         """
+        # 計算覆蓋統計
+        unique_satellites = set(w.satellite_id for w in self.coverage_windows)
+        total_coverage_minutes = sum(w.duration_minutes for w in self.coverage_windows)
+        total_duration_minutes = (self.end_time - self.start_time).total_seconds() / 60.0
+        coverage_percentage = (total_coverage_minutes / total_duration_minutes * 100) if total_duration_minutes > 0 else 0
+        
         return {
+            "total_windows": len(self.coverage_windows),
+            "unique_satellites": len(unique_satellites),
+            "total_coverage_minutes": total_coverage_minutes,
+            "coverage_percentage": coverage_percentage,
             "duration_minutes": self.duration_minutes,
             "average_visible_count": self.average_visible_count,
             "max_visible_count": self.max_visible_count,
             "min_visible_count": self.min_visible_count,
-            "coverage_percentage": self.coverage_percentage,
             "total_snapshots": len(self.snapshots),
-            "observer": {
-                "name": self.observer.name,
-                "latitude": self.observer.position.latitude,
-                "longitude": self.observer.position.longitude,
-                "elevation": self.observer.position.elevation,
-                "min_elevation": self.observer.min_elevation,
-            },
+            "observer_name": self.observer_name,
         }
 
