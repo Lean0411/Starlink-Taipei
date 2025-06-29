@@ -12,7 +12,8 @@ from datetime import datetime
 # 添加專案路徑
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.prediction_service import MultiScalePredictionService
+from app.services.prediction_service import \
+    MultiScalePredictionService  # noqa: E402
 
 
 def print_separator(title=""):
@@ -63,7 +64,7 @@ async def run_prediction_analysis():
         taipei_lat, taipei_lon = 25.033, 121.5654
 
         print("🔮 正在生成多時間尺度預測...")
-        result = await service.generate_prediction_report(taipei_lat, taipei_lon)
+        await service.generate_prediction_report(taipei_lat, taipei_lon)
 
         # 讀取預測結果
         with open("output/prediction_report.json", "r") as f:
@@ -218,16 +219,17 @@ def generate_summary_report(stats, pred_data):
 
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    print(f"📋 Starlink 台北衛星分析系統報告")
+    print("📋 Starlink 台北衛星分析系統報告")
     print(f"🕐 報告生成時間: {current_time}")
     print()
 
     # 系統核心指標
     if stats:
         print("🎯 核心性能指標:")
-        print(
-            f"  🛰️ 衛星覆蓋: 平均 {stats['avg_visible_satellites']:.1f} 顆 (範圍: {stats['min_visible_satellites']}-{stats['max_visible_satellites']})"
-        )
+        avg_sats = stats["avg_visible_satellites"]
+        min_sats = stats["min_visible_satellites"]
+        max_sats = stats["max_visible_satellites"]
+        print(f"  🛰️ 衛星覆蓋: 平均 {avg_sats:.1f} 顆 (範圍: {min_sats}-{max_sats})")
         print(f"  📡 覆蓋率: {stats['coverage_percentage']}%")
         print(f"  📐 信號品質: 平均仰角 {stats['avg_elevation']:.1f}°")
 

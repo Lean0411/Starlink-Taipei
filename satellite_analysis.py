@@ -12,11 +12,11 @@ Starlink 台北衛星分析模組
 """
 
 import argparse
+import concurrent.futures
 import json
 import sys
 import time
 import warnings
-import concurrent.futures
 from datetime import datetime, timedelta, timezone
 from multiprocessing import cpu_count
 from pathlib import Path
@@ -24,43 +24,35 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")  # 使用非互動式後端
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import requests
-from skyfield.api import EarthSatellite, load, wgs84
-from tqdm import tqdm
+import matplotlib.dates as mdates  # noqa: E402
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import requests  # noqa: E402
+from skyfield.api import EarthSatellite, load, wgs84  # noqa: E402
+from tqdm import tqdm  # noqa: E402
 
 # 可選的機器學習依賴
 try:
-    import torch
-    import torch.nn as nn
-    import torch.nn.functional as F
+    import torch  # noqa: F401
+    import torch.nn as nn  # noqa: F401
+    import torch.nn.functional as F  # noqa: F401
 
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
 
 try:
-    from sklearn.preprocessing import StandardScaler
+    from sklearn.preprocessing import StandardScaler  # noqa: F401
 
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
 
 # 導入錯誤處理和日誌系統
-from app.utils import (
-    ErrorContext,
-    NetworkError,
-    TLEDataError,
-    get_logger,
-    handle_errors,
-    log_error,
-    log_info,
-    log_warning,
-    validate_input,
-)
+from app.utils import (ErrorContext, NetworkError, TLEDataError,  # noqa: E402
+                       get_logger, handle_errors, log_error, log_info,
+                       log_warning, validate_input)
 
 # 初始化日誌器
 logger = get_logger("satellite_analysis")

@@ -8,19 +8,15 @@
 
 import json
 import logging
-import os
 import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import pandas as pd
-import requests
-
 # 添加專案根目錄到路徑
 sys.path.append(str(Path(__file__).parent.parent))
 
-from satellite_analysis import StarlinkAnalyzer
+from satellite_analysis import StarlinkAnalyzer  # noqa: E402
 
 # 設置日誌
 logging.basicConfig(level=logging.INFO)
@@ -196,7 +192,7 @@ class HistoricalDataCollector:
 
         logger.info(f"數據集摘要已保存到 {summary_file}")
 
-        print(f"\n=== 數據收集摘要 ===")
+        print("\n=== 數據收集摘要 ===")
         print(f"總文件數: {summary['total_files']}")
         print(f"總觀測次數: {summary['statistics']['total_observations']}")
         print(f"總衛星觀測: {summary['statistics']['total_satellites_observed']}")
@@ -213,11 +209,11 @@ def main():
     end_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     start_date = end_date - timedelta(days=30)
 
-    print(f"=== Starlink 歷史數據收集 ===")
+    print("=== Starlink 歷史數據收集 ===")
     print(
         f"收集時間範圍: {start_date.strftime('%Y-%m-%d')} 到 {end_date.strftime('%Y-%m-%d')}"
     )
-    print(f"觀測位置: 台北 (25.0330°N, 121.5654°E)")
+    print("觀測位置: 台北 (25.0330°N, 121.5654°E)")
 
     # 開始收集
     collected_files = collector.collect_historical_range(start_date, end_date)

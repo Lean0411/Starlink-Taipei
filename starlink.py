@@ -13,22 +13,14 @@
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 # 導入錯誤處理和日誌系統
-from app.utils import (
-    ConfigurationError,
-    ErrorContext,
-    get_logger,
-    handle_errors,
-    log_error,
-    log_info,
-    log_warning,
-)
+from app.utils import (ConfigurationError, ErrorContext, get_logger,
+                       handle_errors, log_error, log_info, log_warning)
 
 # 初始化日誌器
 logger = get_logger("starlink_cli")
@@ -91,10 +83,10 @@ def main():
     shiny_parser.add_argument("--simple", action="store_true", help="啟動簡化版界面")
 
     # 更新數據指令
-    update_parser = subparsers.add_parser("update", help="更新衛星軌道數據")
+    subparsers.add_parser("update", help="更新衛星軌道數據")
 
     # 健康檢查指令
-    health_parser = subparsers.add_parser("health", help="系統健康檢查")
+    subparsers.add_parser("health", help="系統健康檢查")
 
     args = parser.parse_args()
 
@@ -128,7 +120,7 @@ def run_analyze(args):
             args.duration = 10
             log_info("使用快速分析模式（10分鐘）")
 
-        print(f"\n🚀 開始 Starlink 衛星分析...")
+        print("\n🚀 開始 Starlink 衛星分析...")
         print(f"📍 位置: ({args.lat:.4f}, {args.lon:.4f})")
         print(f"⏱️  持續時間: {args.duration} 分鐘")
         print(f"📐 最小仰角: {args.min_elevation}°")
@@ -179,11 +171,11 @@ def run_analyze(args):
 
         if result.returncode != 0:
             log_error(f"分析失敗: {result.stderr}")
-            print(f"\n❌ 分析失敗:")
+            print("\n❌ 分析失敗:")
             print(result.stderr)
             sys.exit(1)
         else:
-            log_info(f"分析成功完成", duration=duration)
+            log_info("分析成功完成", duration=duration)
             print(result.stdout)
 
             # 載入並顯示結果摘要
@@ -222,11 +214,11 @@ def run_shiny(args):
                 f"找不到 Shiny 應用檔案: {app_file}", details={"file": app_file}
             )
 
-        print(f"\n🌐 啟動 Shiny 網頁應用...")
+        print("\n🌐 啟動 Shiny 網頁應用...")
         print(f"📄 應用檔案: {app_file}")
         print(f"🔗 訪問地址: http://localhost:{args.port}")
         print(f"📡 監聽地址: {args.host}:{args.port}")
-        print(f"\n💡 提示: 按 Ctrl+C 停止應用\n")
+        print("\n💡 提示: 按 Ctrl+C 停止應用\n")
 
         # 構建 R 命令
         r_cmd = f"""
@@ -282,7 +274,7 @@ def run_update():
             lines = response.text.strip().split("\n")
             satellite_count = len(lines) // 3
 
-            log_info(f"TLE 數據更新成功", satellite_count=satellite_count)
+            log_info("TLE 數據更新成功", satellite_count=satellite_count)
             print(f"✅ 成功下載 {satellite_count} 顆衛星的軌道數據")
             print(f"📁 數據已保存到: {tle_file}")
 
@@ -293,7 +285,7 @@ def run_update():
 
 
 @handle_errors()
-def run_health_check():
+def run_health_check():  # noqa: C901
     """執行系統健康檢查"""
     with ErrorContext("health_check"):
         print("\n🏥 執行系統健康檢查...\n")
@@ -372,7 +364,7 @@ def run_health_check():
             else:
                 print(f"  ❌ {directory}/ 目錄不存在")
                 path.mkdir(exist_ok=True)
-                print(f"     已自動創建")
+                print("     已自動創建")
 
         # 總結健康狀態
         python_ok = all(health_status["python_packages"].values())

@@ -17,8 +17,8 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # 在導入任何模組之前模擬 torch
-import sys
-import types
+import sys  # noqa: E402
+import types  # noqa: E402
 
 # 創建 mock 模組
 torch_mock = types.ModuleType("torch")

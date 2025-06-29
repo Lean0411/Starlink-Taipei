@@ -244,7 +244,7 @@ def run_built_in_analysis(duration, lat, lon, elevation):
     print(f"  統計摘要: {standard_stats_file}")
     print(f"  CSV數據: {csv_file}")
 
-    print(f"\n分析摘要:")
+    print("\n分析摘要:")
     print(f"  平均可見衛星: {stats['statistics']['avg_satellites']} 顆")
     print(f"  最大可見衛星: {stats['statistics']['max_satellites']} 顆")
     print(f"  平均覆蓋率: {stats['statistics']['avg_coverage']}%")
