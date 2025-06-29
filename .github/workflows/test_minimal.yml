@@ -25,5 +25,5 @@ jobs:
     
     - name: Run basic tests only
       run: |
-        # 只執行最基本的測試
-        python -m pytest tests/test_basic_ci.py -v
+        # 執行真正最小化的測試（不需要任何專案依賴）
+        python -m pytest tests/test_minimal_ci.py -v
