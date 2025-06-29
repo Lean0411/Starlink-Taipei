@@ -13,27 +13,23 @@ Starlink 台北衛星分析模組
 
 import argparse
 import json
-import os
 import sys
 import time
 import warnings
-
-import matplotlib
-import numpy as np
-import pandas as pd
-
-matplotlib.use("Agg")  # 使用非互動式後端
 import concurrent.futures
-from collections import deque
 from datetime import datetime, timedelta, timezone
 from multiprocessing import cpu_count
 from pathlib import Path
 
+import matplotlib
+
+matplotlib.use("Agg")  # 使用非互動式後端
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import requests
-from skyfield.api import EarthSatellite, Loader, load, wgs84
-from skyfield.timelib import Time
+from skyfield.api import EarthSatellite, load, wgs84
 from tqdm import tqdm
 
 # 可選的機器學習依賴
@@ -54,10 +50,17 @@ except ImportError:
     SKLEARN_AVAILABLE = False
 
 # 導入錯誤處理和日誌系統
-from app.utils import (DataValidationError, ErrorContext, NetworkError,
-                       SatelliteCalculationError, TLEDataError, get_logger,
-                       handle_errors, log_debug, log_error, log_info,
-                       log_warning, validate_input)
+from app.utils import (
+    ErrorContext,
+    NetworkError,
+    TLEDataError,
+    get_logger,
+    handle_errors,
+    log_error,
+    log_info,
+    log_warning,
+    validate_input,
+)
 
 # 初始化日誌器
 logger = get_logger("satellite_analysis")
@@ -198,7 +201,7 @@ def analyze_satellite_coverage(
         log_info(f"載入了 {len(satellites)} 顆衛星數據")
 
         # 初始化 Skyfield
-        ts = load.timescale()
+        load.timescale()  # 確保 Skyfield 初始化
 
         # 準備用於多進程的 TLE 數據
         tle_list_of_tuples = [

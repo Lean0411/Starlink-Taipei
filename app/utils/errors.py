@@ -15,7 +15,7 @@
 import functools
 import time
 import uuid
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 from .logger import log_error, log_info, log_warning
 

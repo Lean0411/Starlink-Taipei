@@ -10,9 +10,8 @@ import json
 import logging
 import os
 import subprocess
-import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # 設置日誌
 logging.basicConfig(level=logging.INFO)
@@ -50,7 +49,7 @@ class RIntegrationService:
             result = subprocess.run(["which", "R"], capture_output=True, text=True)
             if result.returncode == 0:
                 return result.stdout.strip()
-        except:
+        except subprocess.CalledProcessError:
             pass
 
         return None

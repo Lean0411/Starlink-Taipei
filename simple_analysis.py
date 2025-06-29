@@ -14,7 +14,6 @@ Starlink 台北衛星分析系統 - 簡化版分析引擎
 
 import argparse
 import json
-import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -81,7 +80,7 @@ def run_simple_analysis(duration_minutes):
     taipei_lon = 121.5654
     min_elevation = 25.0
 
-    print(f"分析參數:")
+    print("分析參數:")
     print(f"  位置: 台北 ({taipei_lat}°N, {taipei_lon}°E)")
     print(f"  時長: {duration_minutes} 分鐘")
     print(f"  最小仰角: {min_elevation}°")
@@ -240,7 +239,7 @@ def run_built_in_analysis(duration, lat, lon, elevation):
                 f"{data_point['time']},{data_point['satellites']},{data_point['elevation']},{data_point['coverage']}\n"
             )
 
-    print(f"分析結果已保存:")
+    print("分析結果已保存:")
     print(f"  詳細數據: {output_file}")
     print(f"  統計摘要: {standard_stats_file}")
     print(f"  CSV數據: {csv_file}")

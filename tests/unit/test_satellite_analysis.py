@@ -20,10 +20,15 @@ import pytest
 # 添加專案根目錄到 Python 路徑
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from satellite_analysis import (ELEVATION, TAIPEI_LAT, TAIPEI_LON,
-                                analyze_satellite_coverage,
-                                calculate_statistics, load_starlink_tle_data,
-                                process_time_point_worker)
+from satellite_analysis import (
+    ELEVATION,
+    TAIPEI_LAT,
+    TAIPEI_LON,
+    analyze_satellite_coverage,
+    calculate_statistics,
+    load_starlink_tle_data,
+    process_time_point_worker,
+)
 
 
 class TestConstants:
