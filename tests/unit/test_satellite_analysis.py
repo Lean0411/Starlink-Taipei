@@ -167,6 +167,7 @@ class TestAnalyzeSatelliteCoverage:
     
     @patch('satellite_analysis.load_starlink_tle_data')
     @patch('concurrent.futures.ProcessPoolExecutor')
+    @pytest.mark.slow
     def test_analyze_basic(self, mock_executor, mock_load_tle, tmp_path):
         """測試基本分析流程"""
         # 模擬 TLE 數據

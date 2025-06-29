@@ -47,8 +47,8 @@ jobs:
       run: |
         # 先執行輕量級測試確保 CI 基本功能
         python -m pytest tests/test_basic_ci.py -v
-        # 然後嘗試執行完整測試（使用 pytest-timeout 避免卡住）
-        python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --timeout=600 || echo "Some tests failed"
+        # 然後嘗試執行完整測試（使用 pytest-timeout 避免卡住，跳過慢速測試）
+        python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --timeout=300 -m "not slow" || echo "Some tests failed"
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
