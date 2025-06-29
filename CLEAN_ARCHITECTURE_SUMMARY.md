@@ -78,13 +78,33 @@ src/
 4. **可維護性**: 修改某層不影響其他層
 5. **可擴展性**: 易於添加新功能
 
+## 最新進展 ✅
+
+### 預測功能實作
+
+1. **預測實體**
+   - `Prediction`: 預測結果實體
+   - `PredictionPoint`: 單個預測時間點
+   - `OptimalWindow`: 最佳觀測窗口
+   - `PredictionTimeScale`: 預測時間尺度枚舉
+
+2. **預測服務**
+   - `PredictionService`: 預測服務介面
+   - `OrbitPredictionService`: 基於軌道計算的預測實作
+
+3. **預測用例**
+   - `PredictCoverageUseCase`: 處理預測請求
+   - `PredictionRequest/Response`: 預測 DTO
+
+4. **API 端點**
+   - `POST /api/v1/predict`: 預測衛星覆蓋
+
 ## 待完成事項
 
-1. 修復失敗的單元測試
-2. 實現預測功能
+1. 整合測試和文檔
+2. 合併到主分支
 3. 提升測試覆蓋率至 80%
-4. 完整的整合測試
-5. API 文檔完善
+4. API 文檔完善
 
 ## 如何使用
 
@@ -113,6 +133,39 @@ Rscript run_app.R
 python -m pytest tests/unit/ -v --cov=src
 ```
 
+### 測試預測 API
+
+```bash
+# 短期預測（1小時）
+curl -X POST http://localhost:8000/api/v1/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "observer_latitude": 25.0330,
+    "observer_longitude": 121.5654,
+    "time_scale": "short_term",
+    "min_elevation": 25.0
+  }'
+
+# 中期預測（24小時）
+curl -X POST http://localhost:8000/api/v1/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "observer_latitude": 25.0330,
+    "observer_longitude": 121.5654,
+    "time_scale": "medium_term",
+    "min_satellites_for_window": 30
+  }'
+
+# 長期預測（7天）
+curl -X POST http://localhost:8000/api/v1/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "observer_latitude": 25.0330,
+    "observer_longitude": 121.5654,
+    "time_scale": "long_term"
+  }'
+```
+
 ## 依賴關係圖
 
 ```
@@ -139,4 +192,4 @@ python -m pytest tests/unit/ -v --cov=src
 
 ## 結論
 
-清晰架構的實作為專案帶來了更好的組織結構和可維護性。雖然還有一些測試需要完善，但核心架構已經建立完成。
+清晰架構的實作為專案帶來了更好的組織結構和可維護性。預測功能已經完整整合，提供了多時間尺度的衛星覆蓋預測能力。核心架構和主要功能已經建立完成，可以進行部署和使用。
