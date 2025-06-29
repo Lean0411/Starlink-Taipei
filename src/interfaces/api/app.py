@@ -1,6 +1,7 @@
 """
 FastAPI 應用程式主入口
 """
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -15,6 +16,7 @@ from ...application.dto.coverage_request import CoverageRequest
 # FastAPI 模型
 class CoverageRequestModel(BaseModel):
     """覆蓋率分析請求模型"""
+
     observer_latitude: float = Field(..., ge=-90, le=90, description="觀測者緯度")
     observer_longitude: float = Field(..., ge=-180, le=180, description="觀測者經度")
     observer_elevation: float = Field(0.0, description="觀測者高度（公尺）")
@@ -23,7 +25,7 @@ class CoverageRequestModel(BaseModel):
     interval_minutes: int = Field(1, gt=0, description="時間間隔（分鐘）")
     min_elevation: float = Field(25.0, ge=0, le=90, description="最小仰角（度）")
     satellite_filter: Optional[str] = Field(None, description="衛星篩選條件")
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -32,17 +34,13 @@ class CoverageRequestModel(BaseModel):
                 "observer_elevation": 10.0,
                 "duration_minutes": 60,
                 "interval_minutes": 1,
-                "min_elevation": 25.0
+                "min_elevation": 25.0,
             }
         }
 
 
 # 創建 FastAPI 應用
-app = FastAPI(
-    title="Starlink Taipei Satellite Analysis API",
-    description="衛星覆蓋率分析 API",
-    version="2.0.0"
-)
+app = FastAPI(title="Starlink Taipei Satellite Analysis API", description="衛星覆蓋率分析 API", version="2.0.0")
 
 # 添加 CORS 中間件
 app.add_middleware(
@@ -58,9 +56,9 @@ app.add_middleware(
 async def startup_event():
     """應用啟動事件"""
     # 初始化容器
-    container = get_container()
+    get_container()
     # 可以在這裡預載入資料
-    
+
 
 @app.get("/")
 async def root():
@@ -68,11 +66,7 @@ async def root():
     return {
         "message": "Starlink Taipei Satellite Analysis API",
         "version": "2.0.0",
-        "endpoints": {
-            "analyze_coverage": "/api/v1/coverage/analyze",
-            "health": "/health",
-            "docs": "/docs"
-        }
+        "endpoints": {"analyze_coverage": "/api/v1/coverage/analyze", "health": "/health", "docs": "/docs"},
     }
 
 
@@ -85,10 +79,10 @@ async def health_check():
 @app.post("/api/v1/coverage/analyze")
 async def analyze_coverage(request: CoverageRequestModel):
     """分析衛星覆蓋率
-    
+
     Args:
         request: 覆蓋率分析請求
-        
+
     Returns:
         覆蓋率分析結果
     """
@@ -96,7 +90,7 @@ async def analyze_coverage(request: CoverageRequestModel):
         # 獲取用例
         container = get_container()
         use_case = container.resolve(AnalyzeCoverageUseCase)
-        
+
         # 轉換請求
         coverage_request = CoverageRequest(
             observer_latitude=request.observer_latitude,
@@ -106,12 +100,12 @@ async def analyze_coverage(request: CoverageRequestModel):
             duration_minutes=request.duration_minutes,
             interval_minutes=request.interval_minutes,
             min_elevation=request.min_elevation,
-            satellite_filter=request.satellite_filter
+            satellite_filter=request.satellite_filter,
         )
-        
+
         # 執行分析
         result = await use_case.execute(coverage_request)
-        
+
         # 返回結果
         return {
             "status": "success",
@@ -126,13 +120,13 @@ async def analyze_coverage(request: CoverageRequestModel):
                     "max_visible_count": result.statistics.max_visible_count,
                     "min_visible_count": result.statistics.min_visible_count,
                     "coverage_percentage": result.statistics.coverage_percentage,
-                    "total_snapshots": result.statistics.total_snapshots
+                    "total_snapshots": result.statistics.total_snapshots,
                 },
                 "optimal_windows": result.optimal_windows,
-                "snapshots_count": len(result.snapshots)
-            }
+                "snapshots_count": len(result.snapshots),
+            },
         }
-    
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -142,10 +136,10 @@ async def analyze_coverage(request: CoverageRequestModel):
 @app.get("/api/v1/coverage/{coverage_id}")
 async def get_coverage(coverage_id: str):
     """獲取特定的覆蓋率分析結果
-    
+
     Args:
         coverage_id: 覆蓋率分析 ID
-        
+
     Returns:
         覆蓋率分析結果
     """
@@ -155,4 +149,6 @@ async def get_coverage(coverage_id: str):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
