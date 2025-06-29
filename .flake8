@@ -1,0 +1,53 @@
+[flake8]
+# 排除不需要檢查的目錄
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    htmlcov,
+    build,
+    dist,
+    *.egg-info,
+    .pytest_cache,
+    .coverage,
+    .tox,
+    docs,
+    migrations,
+    scripts,
+    data,
+    output,
+    models,
+    logs
+
+# 最大行長度
+max-line-length = 127
+
+# 最大複雜度
+max-complexity = 10
+
+# 忽略特定錯誤
+ignore = 
+    # E402: module level import not at top of file (matplotlib.use() 需要)
+    E402,
+    # W503: line break before binary operator
+    W503,
+    # E203: whitespace before ':'
+    E203,
+    # E226: missing whitespace around arithmetic operator
+    E226,
+    # C901: function is too complex
+    C901
+
+# 每個檔案忽略特定錯誤
+per-file-ignores =
+    # 測試檔案可以有較長的行和未使用的導入
+    tests/*:E501,F401,F811
+    # __init__.py 可以有未使用的導入
+    */__init__.py:F401
+    # 設定檔可以有較複雜的結構
+    */settings.py:E501,C901
+    */config.py:E501,C901
+    # satellite_analysis.py 的可選依賴
+    satellite_analysis.py:F401

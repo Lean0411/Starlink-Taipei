@@ -105,7 +105,7 @@ class RateLimitError(BaseStarlinkException):
     http_status = 429
 
 
-def handle_errors(  # noqa: C901
+def handle_errors(
     retry_count: int = 0,
     retry_delay: float = 1.0,
     log_performance: bool = True,

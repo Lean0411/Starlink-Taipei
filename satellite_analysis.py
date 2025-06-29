@@ -24,35 +24,43 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")  # 使用非互動式後端
-import matplotlib.dates as mdates  # noqa: E402
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import requests  # noqa: E402
-from skyfield.api import EarthSatellite, load, wgs84  # noqa: E402
-from tqdm import tqdm  # noqa: E402
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import requests
+from skyfield.api import EarthSatellite, load, wgs84
+from tqdm import tqdm
 
 # 可選的機器學習依賴
 try:
-    import torch  # noqa: F401
-    import torch.nn as nn  # noqa: F401
-    import torch.nn.functional as F  # noqa: F401
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
 
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
 
 try:
-    from sklearn.preprocessing import StandardScaler  # noqa: F401
+    from sklearn.preprocessing import StandardScaler
 
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
 
 # 導入錯誤處理和日誌系統
-from app.utils import (ErrorContext, NetworkError, TLEDataError,  # noqa: E402
-                       get_logger, handle_errors, log_error, log_info,
-                       log_warning, validate_input)
+from app.utils import (
+    ErrorContext,
+    NetworkError,
+    TLEDataError,
+    get_logger,
+    handle_errors,
+    log_error,
+    log_info,
+    log_warning,
+    validate_input,
+)
 
 # 初始化日誌器
 logger = get_logger("satellite_analysis")
@@ -89,9 +97,7 @@ def process_time_point_worker(
         ts_local = load.timescale(**worker_ts_init_args)
 
         # 創建觀測者位置
-        observer = wgs84.latlon(
-            worker_observer_lat, worker_observer_lon, worker_observer_elev
-        )
+        observer = wgs84.latlon(worker_observer_lat, worker_observer_lon, worker_observer_elev)
 
         # 轉換時間
         t = ts_local.from_datetime(t_dt)
@@ -196,9 +202,7 @@ def analyze_satellite_coverage(
         load.timescale()  # 確保 Skyfield 初始化
 
         # 準備用於多進程的 TLE 數據
-        tle_list_of_tuples = [
-            (sat["tle_line1"], sat["tle_line2"]) for sat in satellites
-        ]
+        tle_list_of_tuples = [(sat["tle_line1"], sat["tle_line2"]) for sat in satellites]
 
         # 設置工作進程數
         if max_workers is None:
@@ -219,9 +223,7 @@ def analyze_satellite_coverage(
         results = []
         log_info(f"使用 {max_workers} 個工作進程進行並行處理")
 
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=max_workers
-        ) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = []
             for time_tuple in time_data:
                 future = executor.submit(
@@ -256,9 +258,7 @@ def analyze_satellite_coverage(
         }
 
         # 計算統計資料
-        stats = calculate_statistics(
-            analysis_data, observer_lat, observer_lon, min_elevation
-        )
+        stats = calculate_statistics(analysis_data, observer_lat, observer_lon, min_elevation)
 
         # 生成視覺化
         generate_visualizations(analysis_data, stats, output_dir)
@@ -340,9 +340,7 @@ def load_starlink_tle_data(tle_file=None):
             log_info(f"TLE 數據已緩存到: {cache_file}")
 
         except requests.RequestException as e:
-            raise NetworkError(
-                "無法下載 TLE 數據", details={"url": url, "error": str(e)}
-            )
+            raise NetworkError("無法下載 TLE 數據", details={"url": url, "error": str(e)})
 
     # 解析 TLE 數據
     i = 0
@@ -351,14 +349,8 @@ def load_starlink_tle_data(tle_file=None):
         tle_line1 = lines[i + 1].strip()
         tle_line2 = lines[i + 2].strip()
 
-        if (
-            name.startswith("STARLINK")
-            and len(tle_line1) == 69
-            and len(tle_line2) == 69
-        ):
-            satellites.append(
-                {"name": name, "tle_line1": tle_line1, "tle_line2": tle_line2}
-            )
+        if name.startswith("STARLINK") and len(tle_line1) == 69 and len(tle_line2) == 69:
+            satellites.append({"name": name, "tle_line1": tle_line1, "tle_line2": tle_line2})
 
         i += 3
 
@@ -392,10 +384,7 @@ def calculate_statistics(analysis_data, observer_lat, observer_lon, min_elevatio
             "max_visible_satellites": np.max(visible_counts),
             "min_visible_satellites": np.min(visible_counts),
             "std_visible_satellites": np.std(visible_counts),
-            "coverage_percentage": (
-                np.sum(np.array(visible_counts) > 0) / len(visible_counts)
-            )
-            * 100,
+            "coverage_percentage": (np.sum(np.array(visible_counts) > 0) / len(visible_counts)) * 100,
             "observer_lat": observer_lat,
             "observer_lon": observer_lon,
             "min_elevation_threshold": min_elevation,
@@ -473,9 +462,7 @@ def save_results(result, output_dir):
     with open(output_path / "full_analysis_result.json", "w", encoding="utf-8") as f:
         # 轉換 datetime 物件為字串
         result_copy = result.copy()
-        result_copy["data"]["timestamps"] = [
-            t.isoformat() for t in result["data"]["timestamps"]
-        ]
+        result_copy["data"]["timestamps"] = [t.isoformat() for t in result["data"]["timestamps"]]
         # 移除大型的衛星詳細數據以減少文件大小
         result_copy["data"].pop("visible_satellites", None)
         json.dump(result_copy, f, indent=2, ensure_ascii=False)
@@ -517,14 +504,10 @@ def main():
 
     parser.add_argument("--lat", type=float, default=TAIPEI_LAT, help="觀測者緯度")
     parser.add_argument("--lon", type=float, default=TAIPEI_LON, help="觀測者經度")
-    parser.add_argument(
-        "--elevation", type=float, default=ELEVATION, help="觀測者海拔（米）"
-    )
+    parser.add_argument("--elevation", type=float, default=ELEVATION, help="觀測者海拔（米）")
     parser.add_argument("--duration", type=int, default=60, help="分析持續時間（分鐘）")
     parser.add_argument("--interval", type=float, default=1, help="時間間隔（分鐘）")
-    parser.add_argument(
-        "--min-elevation", type=float, default=25, help="最小仰角（度）"
-    )
+    parser.add_argument("--min-elevation", type=float, default=25, help="最小仰角（度）")
     parser.add_argument("--workers", type=int, help="工作進程數")
     parser.add_argument("--tle-file", type=str, help="TLE 文件路徑")
     parser.add_argument("--output-dir", type=str, default="output", help="輸出目錄")

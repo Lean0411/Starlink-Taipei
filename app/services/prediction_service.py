@@ -78,15 +78,11 @@ class MultiScalePredictionService:
         }
 
         for time_point in time_points:
-            coverage_prediction = self._predict_coverage_at_time(
-                time_point, observer_lat, observer_lon, satellites_subset
-            )
+            coverage_prediction = self._predict_coverage_at_time(time_point, observer_lat, observer_lon, satellites_subset)
             predictions["predictions"].append(coverage_prediction)
 
         # 計算統計信息
-        predictions["statistics"] = self._calculate_prediction_statistics(
-            predictions["predictions"]
-        )
+        predictions["statistics"] = self._calculate_prediction_statistics(predictions["predictions"])
 
         return predictions
 
@@ -102,13 +98,9 @@ class MultiScalePredictionService:
         # 模擬預測結果（實際實現中會調用真實的預測模型）
         base_satellites = np.random.randint(25, 50)
         time_factor = (time_point.hour % 24) / 24.0
-        seasonal_factor = 1 + 0.1 * np.sin(
-            2 * np.pi * time_point.timetuple().tm_yday / 365.25
-        )
+        seasonal_factor = 1 + 0.1 * np.sin(2 * np.pi * time_point.timetuple().tm_yday / 365.25)
 
-        predicted_satellites = int(
-            base_satellites * seasonal_factor * (0.9 + 0.2 * time_factor)
-        )
+        predicted_satellites = int(base_satellites * seasonal_factor * (0.9 + 0.2 * time_factor))
         predicted_elevation = 35 + 25 * np.random.random()
 
         # 預測不確定性
@@ -161,9 +153,7 @@ class MultiScalePredictionService:
             },
             "coverage": {
                 "mean": np.mean(coverage_probs),
-                "availability_percentage": len([p for p in coverage_probs if p > 80])
-                / len(coverage_probs)
-                * 100,
+                "availability_percentage": len([p for p in coverage_probs if p > 80]) / len(coverage_probs) * 100,
             },
         }
 
@@ -187,9 +177,7 @@ class MultiScalePredictionService:
             最佳觀測時段列表
         """
         # 預測所有時段
-        predictions = self.predict_satellite_coverage(
-            observer_lat, observer_lon, "medium_term"
-        )
+        predictions = self.predict_satellite_coverage(observer_lat, observer_lon, "medium_term")
 
         # 找出滿足條件的時段
         optimal_windows = []
@@ -207,21 +195,13 @@ class MultiScalePredictionService:
                     }
                 else:
                     current_window["end_time"] = pred["timestamp"]
-                    current_window["avg_satellites"] = (
-                        current_window["avg_satellites"] + pred["predicted_satellites"]
-                    ) / 2
-                    current_window["max_elevation"] = max(
-                        current_window["max_elevation"], pred["predicted_elevation"]
-                    )
+                    current_window["avg_satellites"] = (current_window["avg_satellites"] + pred["predicted_satellites"]) / 2
+                    current_window["max_elevation"] = max(current_window["max_elevation"], pred["predicted_elevation"])
                     start_dt = datetime.fromisoformat(current_window["start_time"])
                     end_dt = datetime.fromisoformat(current_window["end_time"])
-                    current_window["duration_minutes"] = int(
-                        (end_dt - start_dt).total_seconds() / 60
-                    )
+                    current_window["duration_minutes"] = int((end_dt - start_dt).total_seconds() / 60)
             else:
-                if (
-                    current_window and current_window["duration_minutes"] >= 30
-                ):  # 至少30分鐘
+                if current_window and current_window["duration_minutes"] >= 30:  # 至少30分鐘
                     optimal_windows.append(current_window)
                 current_window = None
 
@@ -260,19 +240,13 @@ class MultiScalePredictionService:
         # 生成各種時間尺度的預測
         for pred_type in ["short_term", "medium_term", "long_term"]:
             print(f"生成 {pred_type} 預測...")
-            report["predictions"][pred_type] = self.predict_satellite_coverage(
-                observer_lat, observer_lon, pred_type
-            )
+            report["predictions"][pred_type] = self.predict_satellite_coverage(observer_lat, observer_lon, pred_type)
 
         # 生成最佳觀測窗口
-        report["optimal_windows"] = self.predict_optimal_observation_windows(
-            observer_lat, observer_lon
-        )
+        report["optimal_windows"] = self.predict_optimal_observation_windows(observer_lat, observer_lon)
 
         # 預測趨勢分析
-        report["trend_analysis"] = self._analyze_prediction_trends(
-            report["predictions"]
-        )
+        report["trend_analysis"] = self._analyze_prediction_trends(report["predictions"])
 
         # 保存報告
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -303,13 +277,9 @@ class MultiScalePredictionService:
                 stats = pred_data["statistics"]
                 trends[pred_type] = {
                     "satellite_trend": "stable",  # 可以根據實際數據計算趨勢
-                    "coverage_quality": (
-                        "good" if stats["coverage"]["mean"] > 85 else "moderate"
-                    ),
+                    "coverage_quality": ("good" if stats["coverage"]["mean"] > 85 else "moderate"),
                     "reliability_score": min(100, stats["satellites"]["mean"] * 2),
-                    "peak_performance_hours": self._find_peak_hours(
-                        pred_data["predictions"]
-                    ),
+                    "peak_performance_hours": self._find_peak_hours(pred_data["predictions"]),
                 }
 
         return trends
@@ -325,9 +295,7 @@ class MultiScalePredictionService:
             hourly_performance[hour].append(pred["predicted_satellites"])
 
         # 計算每小時平均表現
-        avg_performance = {
-            hour: np.mean(values) for hour, values in hourly_performance.items()
-        }
+        avg_performance = {hour: np.mean(values) for hour, values in hourly_performance.items()}
 
         # 找出表現最好的前3個小時
         sorted_hours = sorted(avg_performance.items(), key=lambda x: x[1], reverse=True)
@@ -353,9 +321,7 @@ if __name__ == "__main__":
     print("=== 測試多時間尺度預測 ===")
 
     # 短期預測
-    short_pred = service.predict_satellite_coverage(
-        taipei_lat, taipei_lon, "short_term"
-    )
+    short_pred = service.predict_satellite_coverage(taipei_lat, taipei_lon, "short_term")
     print(f"短期預測 - 預測點數: {short_pred['time_points']}")
     print(f"平均衛星數: {short_pred['statistics']['satellites']['mean']:.1f}")
 
@@ -363,10 +329,7 @@ if __name__ == "__main__":
     windows = service.predict_optimal_observation_windows(taipei_lat, taipei_lon)
     print(f"\n找到 {len(windows)} 個最佳觀測窗口")
     for i, window in enumerate(windows[:3]):  # 顯示前3個
-        print(
-            f"窗口 {i+1}: {window['duration_minutes']} 分鐘, "
-            f"平均 {window['avg_satellites']:.1f} 顆衛星"
-        )
+        print(f"窗口 {i+1}: {window['duration_minutes']} 分鐘, " f"平均 {window['avg_satellites']:.1f} 顆衛星")
 
     # 生成完整報告
     report_path = service.generate_prediction_report(taipei_lat, taipei_lon)

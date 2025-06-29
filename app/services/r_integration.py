@@ -193,9 +193,7 @@ class RIntegrationService:
                 "data": None,
             }
 
-    def run_shiny_app(
-        self, port: int = 3838, host: str = "0.0.0.0"
-    ) -> subprocess.Popen:
+    def run_shiny_app(self, port: int = 3838, host: str = "0.0.0.0") -> subprocess.Popen:
         """
         啟動 Shiny 應用
 

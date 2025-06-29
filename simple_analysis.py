@@ -29,9 +29,7 @@ def main():
     parser.add_argument("--quick", action="store_true", help="快速分析 (30分鐘)")
     parser.add_argument("--standard", action="store_true", help="標準分析 (60分鐘)")
     parser.add_argument("--detailed", action="store_true", help="詳細分析 (120分鐘)")
-    parser.add_argument(
-        "--duration", type=int, default=60, help="自定義分析時長（分鐘），預設60分鐘"
-    )
+    parser.add_argument("--duration", type=int, default=60, help="自定義分析時長（分鐘），預設60分鐘")
 
     args = parser.parse_args()
 
@@ -88,14 +86,10 @@ def run_simple_analysis(duration_minutes):
     # 檢查是否可以調用完整版分析
     if check_full_analysis_available():
         print("發現完整版分析系統，正在調用...")
-        return call_full_analysis(
-            duration_minutes, taipei_lat, taipei_lon, min_elevation
-        )
+        return call_full_analysis(duration_minutes, taipei_lat, taipei_lon, min_elevation)
     else:
         print("使用內建簡化分析...")
-        return run_built_in_analysis(
-            duration_minutes, taipei_lat, taipei_lon, min_elevation
-        )
+        return run_built_in_analysis(duration_minutes, taipei_lat, taipei_lon, min_elevation)
 
 
 def check_full_analysis_available():
@@ -173,9 +167,7 @@ def run_built_in_analysis(duration, lat, lon, elevation):
         # 模擬衛星數量變化（基於時間的正弦波 + 隨機變化）
         base_satellites = 30
         time_factor = i * 2 * math.pi / len(time_points)
-        satellites = (
-            base_satellites + 10 * math.sin(time_factor) + random.randint(-5, 5)
-        )
+        satellites = base_satellites + 10 * math.sin(time_factor) + random.randint(-5, 5)
         satellites = max(15, int(satellites))  # 確保最少15顆
 
         # 模擬仰角
@@ -217,10 +209,7 @@ def run_built_in_analysis(duration, lat, lon, elevation):
     }
 
     # 保存結果
-    output_file = (
-        Path("output")
-        / f"simple_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    )
+    output_file = Path("output") / f"simple_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(stats, f, ensure_ascii=False, indent=2)
@@ -235,9 +224,7 @@ def run_built_in_analysis(duration, lat, lon, elevation):
     with open(csv_file, "w", encoding="utf-8") as f:
         f.write("time,satellites,elevation,coverage\n")
         for data_point in analysis_data:
-            f.write(
-                f"{data_point['time']},{data_point['satellites']},{data_point['elevation']},{data_point['coverage']}\n"
-            )
+            f.write(f"{data_point['time']},{data_point['satellites']},{data_point['elevation']},{data_point['coverage']}\n")
 
     print("分析結果已保存:")
     print(f"  詳細數據: {output_file}")

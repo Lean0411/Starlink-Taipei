@@ -114,9 +114,7 @@ class Logger:
         # 控制台處理器（人類可讀格式）
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.INFO)
-        console_formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        console_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         console_handler.setFormatter(console_formatter)
 
         # 文件處理器（JSON 格式，支援輪轉）

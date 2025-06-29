@@ -19,8 +19,7 @@ import time
 from pathlib import Path
 
 # 導入錯誤處理和日誌系統
-from app.utils import (ConfigurationError, ErrorContext, get_logger,
-                       handle_errors, log_error, log_info, log_warning)
+from app.utils import ConfigurationError, ErrorContext, get_logger, handle_errors, log_error, log_info, log_warning
 
 # 初始化日誌器
 logger = get_logger("starlink_cli")
@@ -44,15 +43,9 @@ def main():
 
     # 分析指令
     analyze_parser = subparsers.add_parser("analyze", help="執行衛星覆蓋分析")
-    analyze_parser.add_argument(
-        "--duration", type=int, default=30, help="分析時間長度（分鐘），預設30分鐘"
-    )
-    analyze_parser.add_argument(
-        "--quick", action="store_true", help="快速分析（10分鐘）"
-    )
-    analyze_parser.add_argument(
-        "--interval", type=float, default=1.0, help="時間間隔（分鐘），預設1.0分鐘"
-    )
+    analyze_parser.add_argument("--duration", type=int, default=30, help="分析時間長度（分鐘），預設30分鐘")
+    analyze_parser.add_argument("--quick", action="store_true", help="快速分析（10分鐘）")
+    analyze_parser.add_argument("--interval", type=float, default=1.0, help="時間間隔（分鐘），預設1.0分鐘")
     analyze_parser.add_argument(
         "--min_elevation",
         type=float,
@@ -65,21 +58,13 @@ def main():
         default=None,
         help="用於並行處理的 CPU 核心數 (預設使用所有可用核心)",
     )
-    analyze_parser.add_argument(
-        "--lat", type=float, default=25.0330, help="觀察者緯度，預設台北"
-    )
-    analyze_parser.add_argument(
-        "--lon", type=float, default=121.5654, help="觀察者經度，預設台北"
-    )
+    analyze_parser.add_argument("--lat", type=float, default=25.0330, help="觀察者緯度，預設台北")
+    analyze_parser.add_argument("--lon", type=float, default=121.5654, help="觀察者經度，預設台北")
 
     # Shiny 應用指令
     shiny_parser = subparsers.add_parser("shiny", help="啟動 Shiny 網頁介面")
-    shiny_parser.add_argument(
-        "--port", type=int, default=3838, help="網頁應用端口（預設3838）"
-    )
-    shiny_parser.add_argument(
-        "--host", type=str, default="0.0.0.0", help="網頁應用主機（預設0.0.0.0）"
-    )
+    shiny_parser.add_argument("--port", type=int, default=3838, help="網頁應用端口（預設3838）")
+    shiny_parser.add_argument("--host", type=str, default="0.0.0.0", help="網頁應用主機（預設0.0.0.0）")
     shiny_parser.add_argument("--simple", action="store_true", help="啟動簡化版界面")
 
     # 更新數據指令
@@ -111,9 +96,7 @@ def main():
 @handle_errors(retry_count=2)
 def run_analyze(args):
     """執行衛星分析"""
-    with ErrorContext(
-        "satellite_analysis", duration=args.duration, lat=args.lat, lon=args.lon
-    ):
+    with ErrorContext("satellite_analysis", duration=args.duration, lat=args.lat, lon=args.lon):
 
         # 如果是快速分析，覆蓋持續時間
         if args.quick:
@@ -210,9 +193,7 @@ def run_shiny(args):
 
         # 檢查檔案是否存在
         if not Path(app_file).exists():
-            raise ConfigurationError(
-                f"找不到 Shiny 應用檔案: {app_file}", details={"file": app_file}
-            )
+            raise ConfigurationError(f"找不到 Shiny 應用檔案: {app_file}", details={"file": app_file})
 
         print("\n🌐 啟動 Shiny 網頁應用...")
         print(f"📄 應用檔案: {app_file}")
@@ -285,7 +266,7 @@ def run_update():
 
 
 @handle_errors()
-def run_health_check():  # noqa: C901
+def run_health_check():
     """執行系統健康檢查"""
     with ErrorContext("health_check"):
         print("\n🏥 執行系統健康檢查...\n")

@@ -17,10 +17,15 @@ import pytest
 # 添加專案根目錄到 Python 路徑
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from satellite_analysis import (ELEVATION, TAIPEI_LAT,  # noqa: E402
-                                TAIPEI_LON, analyze_satellite_coverage,
-                                calculate_statistics, load_starlink_tle_data,
-                                process_time_point_worker)
+from satellite_analysis import TAIPEI_LAT  # noqa: E402
+from satellite_analysis import (
+    ELEVATION,
+    TAIPEI_LON,
+    analyze_satellite_coverage,
+    calculate_statistics,
+    load_starlink_tle_data,
+    process_time_point_worker,
+)
 
 
 class TestConstants:
@@ -172,9 +177,7 @@ class TestAnalyzeSatelliteCoverage:
         # 模擬並行處理結果
         mock_future = MagicMock()
         mock_future.result.return_value = (0, 5, [])
-        mock_executor.return_value.__enter__.return_value.submit.return_value = (
-            mock_future
-        )
+        mock_executor.return_value.__enter__.return_value.submit.return_value = mock_future
 
         # 執行分析
         result = analyze_satellite_coverage(

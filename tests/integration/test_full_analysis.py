@@ -22,9 +22,7 @@ class TestFullAnalysisWorkflow:
 
     def test_command_line_help(self):
         """測試命令行幫助"""
-        result = subprocess.run(
-            [sys.executable, "starlink.py", "--help"], capture_output=True, text=True
-        )
+        result = subprocess.run([sys.executable, "starlink.py", "--help"], capture_output=True, text=True)
 
         assert result.returncode == 0
         assert "Starlink 台北衛星分析系統" in result.stdout
