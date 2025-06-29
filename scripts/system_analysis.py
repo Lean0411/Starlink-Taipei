@@ -3,11 +3,11 @@
 完整的 Starlink 台北衛星分析系統狀態檢查與預測分析
 """
 
-import json
 import asyncio
-from datetime import datetime
-import sys
+import json
 import os
+import sys
+from datetime import datetime
 
 # 添加專案路徑
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -175,8 +175,9 @@ def check_web_application():
     print_separator("網頁應用狀態")
 
     try:
-        import requests
         import subprocess
+
+        import requests
 
         # 檢查進程
         result = subprocess.run(["ps", "aux"], capture_output=True, text=True)

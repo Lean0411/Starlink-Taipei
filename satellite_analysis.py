@@ -11,28 +11,30 @@ Starlink 台北衛星分析模組
 提供衛星可見性和覆蓋率分析功能，整合統一錯誤處理和日誌系統
 """
 
+import argparse
+import json
 import os
 import sys
-import json
 import time
-import argparse
 import warnings
-import pandas as pd
-import numpy as np
+
 import matplotlib
+import numpy as np
+import pandas as pd
 
 matplotlib.use("Agg")  # 使用非互動式後端
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-import requests
 import concurrent.futures
-from tqdm import tqdm
-from skyfield.api import load, wgs84, EarthSatellite, Loader
-from skyfield.timelib import Time
-from multiprocessing import cpu_count
 from collections import deque
+from datetime import datetime, timedelta, timezone
+from multiprocessing import cpu_count
+from pathlib import Path
+
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import requests
+from skyfield.api import EarthSatellite, Loader, load, wgs84
+from skyfield.timelib import Time
+from tqdm import tqdm
 
 # 可選的機器學習依賴
 try:
@@ -52,20 +54,10 @@ except ImportError:
     SKLEARN_AVAILABLE = False
 
 # 導入錯誤處理和日誌系統
-from app.utils import (
-    get_logger,
-    log_info,
-    log_error,
-    log_warning,
-    log_debug,
-    handle_errors,
-    validate_input,
-    ErrorContext,
-    SatelliteCalculationError,
-    TLEDataError,
-    NetworkError,
-    DataValidationError,
-)
+from app.utils import (DataValidationError, ErrorContext, NetworkError,
+                       SatelliteCalculationError, TLEDataError, get_logger,
+                       handle_errors, log_debug, log_error, log_info,
+                       log_warning, validate_input)
 
 # 初始化日誌器
 logger = get_logger("satellite_analysis")

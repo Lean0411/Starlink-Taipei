@@ -12,23 +12,16 @@
 """
 
 import argparse
-import sys
+import json
 import os
 import subprocess
-from pathlib import Path
-import json
+import sys
 import time
+from pathlib import Path
 
 # 導入錯誤處理和日誌系統
-from app.utils import (
-    get_logger,
-    log_info,
-    log_error,
-    log_warning,
-    handle_errors,
-    ErrorContext,
-    ConfigurationError,
-)
+from app.utils import (ConfigurationError, ErrorContext, get_logger,
+                       handle_errors, log_error, log_info, log_warning)
 
 # 初始化日誌器
 logger = get_logger("starlink_cli")

@@ -7,10 +7,11 @@
 pytest 配置和 fixtures
 """
 
-import sys
 import os
-import pytest
+import sys
 from unittest.mock import patch
+
+import pytest
 
 # 添加專案根目錄到 Python 路徑
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

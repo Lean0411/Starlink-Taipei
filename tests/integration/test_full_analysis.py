@@ -7,11 +7,12 @@
 完整分析流程的整合測試
 """
 
-import sys
 import os
-import pytest
 import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 # 添加專案根目錄到 Python 路徑
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))

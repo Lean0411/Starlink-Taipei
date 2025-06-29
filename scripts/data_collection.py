@@ -6,15 +6,16 @@
 用於收集 Starlink 衛星歷史軌道數據以訓練深度學習模型
 """
 
+import json
+import logging
 import os
 import sys
-import requests
-import json
-import pandas as pd
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
-import time
-import logging
+
+import pandas as pd
+import requests
 
 # 添加專案根目錄到路徑
 sys.path.append(str(Path(__file__).parent.parent))

@@ -7,27 +7,23 @@
 衛星分析模組的單元測試
 """
 
-import sys
 import os
-import pytest
-import pandas as pd
-import numpy as np
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pandas as pd
+import pytest
 
 # 添加專案根目錄到 Python 路徑
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from satellite_analysis import (
-    analyze_satellite_coverage,
-    process_time_point_worker,
-    calculate_statistics,
-    load_starlink_tle_data,
-    TAIPEI_LAT,
-    TAIPEI_LON,
-    ELEVATION,
-)
+from satellite_analysis import (ELEVATION, TAIPEI_LAT, TAIPEI_LON,
+                                analyze_satellite_coverage,
+                                calculate_statistics, load_starlink_tle_data,
+                                process_time_point_worker)
 
 
 class TestConstants:

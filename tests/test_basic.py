@@ -7,8 +7,8 @@
 基本測試 - 驗證測試框架正常運作
 """
 
-import sys
 import os
+import sys
 
 # 添加專案根目錄到 Python 路徑
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -25,7 +25,7 @@ def test_import_main_module():
 
 def test_constants():
     """測試常數定義"""
-    from satellite_analysis import TAIPEI_LAT, TAIPEI_LON, ELEVATION
+    from satellite_analysis import ELEVATION, TAIPEI_LAT, TAIPEI_LON
 
     assert TAIPEI_LAT == 25.0330
     assert TAIPEI_LON == 121.5654

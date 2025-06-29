@@ -13,9 +13,9 @@ Starlink 台北衛星分析系統 - 簡化版分析引擎
 """
 
 import argparse
-import sys
-import os
 import json
+import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -151,8 +151,8 @@ def run_built_in_analysis(duration, lat, lon, elevation):
     """
     內建的簡化分析（生成示例數據）
     """
-    import random
     import math
+    import random
 
     print("正在生成分析數據...")
 

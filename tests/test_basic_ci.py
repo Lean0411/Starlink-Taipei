@@ -7,8 +7,8 @@
 基本測試 - 專門為 CI/CD 環境設計的輕量級測試
 """
 
-import sys
 import os
+import sys
 
 # 添加專案根目錄到 Python 路徑
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
