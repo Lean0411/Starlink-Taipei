@@ -31,11 +31,22 @@ from tqdm import tqdm
 from skyfield.api import load, wgs84, EarthSatellite, Loader
 from skyfield.timelib import Time
 from multiprocessing import cpu_count
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from sklearn.preprocessing import StandardScaler
 from collections import deque
+
+# 可選的機器學習依賴
+try:
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    
+try:
+    from sklearn.preprocessing import StandardScaler
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
 
 # 導入錯誤處理和日誌系統
 from app.utils import (
@@ -343,17 +354,31 @@ def calculate_statistics(analysis_data, observer_lat, observer_lon, min_elevatio
     """計算統計資料"""
     visible_counts = analysis_data['visible_counts']
     
-    stats = {
-        'avg_visible_satellites': np.mean(visible_counts),
-        'max_visible_satellites': np.max(visible_counts),
-        'min_visible_satellites': np.min(visible_counts),
-        'std_visible_satellites': np.std(visible_counts),
-        'coverage_percentage': (np.sum(np.array(visible_counts) > 0) / len(visible_counts)) * 100,
-        'observer_lat': observer_lat,
-        'observer_lon': observer_lon,
-        'min_elevation_threshold': min_elevation,
-        'total_observations': len(visible_counts)
-    }
+    # 處理空數據情況
+    if len(visible_counts) == 0:
+        stats = {
+            'avg_visible_satellites': 0,
+            'max_visible_satellites': 0,
+            'min_visible_satellites': 0,
+            'std_visible_satellites': 0,
+            'coverage_percentage': 0,
+            'observer_lat': observer_lat,
+            'observer_lon': observer_lon,
+            'min_elevation_threshold': min_elevation,
+            'total_observations': 0
+        }
+    else:
+        stats = {
+            'avg_visible_satellites': np.mean(visible_counts),
+            'max_visible_satellites': np.max(visible_counts),
+            'min_visible_satellites': np.min(visible_counts),
+            'std_visible_satellites': np.std(visible_counts),
+            'coverage_percentage': (np.sum(np.array(visible_counts) > 0) / len(visible_counts)) * 100,
+            'observer_lat': observer_lat,
+            'observer_lon': observer_lon,
+            'min_elevation_threshold': min_elevation,
+            'total_observations': len(visible_counts)
+        }
     
     # 計算平均仰角
     all_elevations = []
