@@ -74,8 +74,11 @@
 ### 簡化版（推薦新手）
 
 ```bash
-# 一鍵啟動
-Rscript quick_start.R
+# 啟動 Shiny 網頁介面
+python starlink.py shiny
+
+# 或執行衛星分析
+python starlink.py analyze --duration 30
 ```
 
 啟動後訪問 http://localhost:3838 即可使用。
@@ -83,6 +86,18 @@ Rscript quick_start.R
 ### 完整安裝
 
 詳細的安裝步驟請參考 [安裝指南](./docs/user-guide/installation.md)。
+
+## 系統架構
+
+本專案採用清晰架構（Clean Architecture）設計：
+
+```
+src/
+├── domain/         # 領域層：核心業務邏輯
+├── application/    # 應用層：用例和協調
+├── infrastructure/ # 基礎設施層：技術實作
+└── interfaces/     # 介面層：API、CLI、UI
+```
 
 ## 文件導航
 
