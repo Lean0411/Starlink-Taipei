@@ -26,4 +26,5 @@ jobs:
     - name: Run basic tests only
       run: |
         # 執行真正最小化的測試（不需要任何專案依賴）
-        python -m pytest tests/test_minimal_ci.py -v
+        # 覆寫 pytest.ini 中的設定，不使用覆蓋率檢查
+        python -m pytest tests/test_minimal_ci.py -v --override-ini="addopts=-v"
