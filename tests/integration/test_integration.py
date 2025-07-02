@@ -18,7 +18,7 @@ def wait_for_api(url, max_retries=10):
             if response.status_code == 200:
                 print("✓ API 已啟動")
                 return True
-        except:
+        except Exception:
             pass
         time.sleep(1)
     return False

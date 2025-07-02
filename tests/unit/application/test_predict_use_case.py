@@ -151,7 +151,7 @@ class TestPredictCoverageUseCase:
 
         # 執行用例
         use_case = PredictCoverageUseCase(satellite_repo, prediction_service)
-        response = use_case.execute(sample_request)
+        use_case.execute(sample_request)
 
         # 驗證過濾功能
         # 檢查 predict_coverage 是否使用過濾後的衛星列表調用
