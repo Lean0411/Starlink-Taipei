@@ -3,7 +3,7 @@
 """
 
 from dataclasses import dataclass
-from math import radians, sin, cos, sqrt, atan2
+from math import atan2, cos, radians, sin, sqrt
 
 
 @dataclass(frozen=True)
@@ -62,4 +62,3 @@ class Position:
             tuple: (緯度弧度, 經度弧度)
         """
         return radians(self.latitude), radians(self.longitude)
-

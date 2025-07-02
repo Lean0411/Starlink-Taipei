@@ -3,17 +3,18 @@
 """
 
 from datetime import datetime
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 
 try:
-    from skyfield.api import load, EarthSatellite, wgs84
+    from skyfield.api import EarthSatellite, load, wgs84
 
     SKYFIELD_AVAILABLE = True
 except ImportError:
     SKYFIELD_AVAILABLE = False
 
-from ...domain.services.orbit_calculator import OrbitCalculator
 from ...domain.entities.satellite import Satellite
+from ...domain.services.orbit_calculator import OrbitCalculator
+from ...domain.utils.time_utils import TimeUtils
 from ...domain.value_objects.position import Position
 
 
@@ -78,7 +79,7 @@ class SkyfieldOrbitCalculator(OrbitCalculator):
             Position: 衛星位置
         """
         skyfield_sat = self._get_skyfield_satellite(satellite)
-        t = self.ts.utc(time.year, time.month, time.day, time.hour, time.minute, time.second)
+        t = TimeUtils.datetime_to_skyfield(self.ts, time)
 
         geocentric = skyfield_sat.at(t)
         subpoint = wgs84.subpoint(geocentric)
@@ -103,7 +104,7 @@ class SkyfieldOrbitCalculator(OrbitCalculator):
             Tuple[float, float, float]: (方位角, 仰角, 距離)
         """
         skyfield_sat = self._get_skyfield_satellite(satellite)
-        t = self.ts.utc(time.year, time.month, time.day, time.hour, time.minute, time.second)
+        t = TimeUtils.datetime_to_skyfield(self.ts, time)
 
         # 創建觀測者位置
         observer = wgs84.latlon(observer_position.latitude, observer_position.longitude, observer_position.elevation)
@@ -126,10 +127,9 @@ class SkyfieldOrbitCalculator(OrbitCalculator):
             bool: 是否被太陽照射
         """
         skyfield_sat = self._get_skyfield_satellite(satellite)
-        t = self.ts.utc(time.year, time.month, time.day, time.hour, time.minute, time.second)
+        t = TimeUtils.datetime_to_skyfield(self.ts, time)
 
         # 檢查衛星是否在地球陰影中
         sunlit = skyfield_sat.at(t).is_sunlit(load("de421.bsp"))
 
         return bool(sunlit)
-

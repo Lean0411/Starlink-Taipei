@@ -7,12 +7,6 @@
 基本測試 - 驗證測試框架正常運作
 """
 
-import os
-import sys
-
-# 添加專案根目錄到 Python 路徑
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 
 def test_import_main_module():
     """測試主模組可以被導入"""

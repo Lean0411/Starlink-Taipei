@@ -2,13 +2,13 @@
 覆蓋率分析領域服務
 """
 
+import uuid
 from datetime import datetime, timedelta
 from typing import List
-import uuid
 
-from ..entities.satellite import Satellite
-from ..entities.observer import Observer
 from ..entities.coverage import Coverage, CoverageSnapshot, SatelliteVisibility
+from ..entities.observer import Observer
+from ..entities.satellite import Satellite
 from .orbit_calculator import OrbitCalculator
 
 
@@ -158,4 +158,3 @@ class CoverageAnalyzer:
         windows.sort(key=lambda w: w["avg_satellites"], reverse=True)
 
         return windows
-

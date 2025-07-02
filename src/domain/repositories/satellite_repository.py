@@ -25,7 +25,6 @@ class SatelliteRepository(ABC):
         """
         pass
 
-
     @abstractmethod
     async def get_active_satellites(self) -> List[Satellite]:
         """獲取所有活躍的衛星
@@ -34,7 +33,6 @@ class SatelliteRepository(ABC):
             List[Satellite]: 活躍衛星列表
         """
         pass
-
 
     @abstractmethod
     async def get_satellite_by_id(self, satellite_id: str) -> Optional[Satellite]:
@@ -48,7 +46,6 @@ class SatelliteRepository(ABC):
         """
         pass
 
-
     @abstractmethod
     async def get_satellites_by_name_pattern(self, pattern: str) -> List[Satellite]:
         """根據名稱模式獲取衛星
@@ -60,7 +57,6 @@ class SatelliteRepository(ABC):
             List[Satellite]: 符合模式的衛星列表
         """
         pass
-
 
     @abstractmethod
     async def update_satellite_tle(self, satellite_id: str, tle_data: dict) -> bool:
@@ -75,7 +71,6 @@ class SatelliteRepository(ABC):
         """
         pass
 
-
     @abstractmethod
     async def get_last_update_time(self) -> Optional[datetime]:
         """獲取最後更新時間
@@ -84,4 +79,3 @@ class SatelliteRepository(ABC):
             Optional[datetime]: 最後更新時間，如果沒有則返回 None
         """
         pass
-

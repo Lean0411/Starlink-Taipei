@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from ..value_objects.position import Position
 from ..value_objects.orbital_elements import OrbitalElements
+from ..value_objects.position import Position
 
 
 @dataclass
@@ -66,4 +66,3 @@ class Satellite:
 
     def __hash__(self) -> int:
         return hash(self.satellite_id)
-

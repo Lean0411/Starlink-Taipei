@@ -4,21 +4,21 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-from .satellite import Satellite
 from .observer import Observer
+from .satellite import Satellite
 
 
 @dataclass
 class CoverageWindow:
     """衛星覆蓋視窗"""
-    
+
     satellite_id: str
     start_time: datetime
     end_time: datetime
     max_elevation: float
-    
+
     @property
     def duration_minutes(self) -> float:
         """覆蓋持續時間（分鐘）"""
@@ -91,7 +91,7 @@ class Coverage:
     coverage_windows: List[CoverageWindow] = field(default_factory=list)
     snapshots: List[CoverageSnapshot] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def add_coverage_window(self, window: CoverageWindow) -> None:
         """添加覆蓋視窗"""
         self.coverage_windows.append(window)
@@ -141,7 +141,7 @@ class Coverage:
         total_coverage_minutes = sum(w.duration_minutes for w in self.coverage_windows)
         total_duration_minutes = (self.end_time - self.start_time).total_seconds() / 60.0
         coverage_percentage = (total_coverage_minutes / total_duration_minutes * 100) if total_duration_minutes > 0 else 0
-        
+
         return {
             "total_windows": len(self.coverage_windows),
             "unique_satellites": len(unique_satellites),
@@ -154,4 +154,3 @@ class Coverage:
             "total_snapshots": len(self.snapshots),
             "observer_name": self.observer_name,
         }
-

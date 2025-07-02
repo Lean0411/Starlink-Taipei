@@ -29,7 +29,6 @@ class OrbitCalculator(ABC):
         """
         pass
 
-
     @abstractmethod
     def calculate_pass_details(
         self, satellite: Satellite, observer_position: Position, time: datetime
@@ -46,7 +45,6 @@ class OrbitCalculator(ABC):
         """
         pass
 
-
     @abstractmethod
     def is_sunlit(self, satellite: Satellite, time: datetime) -> bool:
         """檢查衛星是否被太陽照射
@@ -59,4 +57,3 @@ class OrbitCalculator(ABC):
             bool: 是否被太陽照射
         """
         pass
-

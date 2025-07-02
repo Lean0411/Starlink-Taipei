@@ -51,4 +51,3 @@ class Observer:
             name="台北觀測站",
             position=Position(latitude=25.0330, longitude=121.5654, elevation=10.0),
         )
-

@@ -3,10 +3,11 @@ Celestrak 衛星資料庫實作
 """
 
 import json
-from datetime import datetime
-from pathlib import Path
-from typing import List, Optional
+import logging
 import re
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, List, Optional
 
 try:
     import aiohttp
@@ -15,17 +16,20 @@ try:
 except ImportError:
     AIOHTTP_AVAILABLE = False
 
+from ...domain.constants import CacheConstants, NetworkConstants, SatelliteConstants
 from ...domain.entities.satellite import Satellite
-from ...domain.value_objects.orbital_elements import OrbitalElements
 from ...domain.repositories.satellite_repository import SatelliteRepository
+from ...domain.value_objects.orbital_elements import OrbitalElements
+
+logger = logging.getLogger(__name__)
 
 
 class CelestrakSatelliteRepository(SatelliteRepository):
     """從 Celestrak 獲取衛星 TLE 資料的資料庫實作"""
 
-    CELESTRAK_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle"
-    CACHE_FILE = "data/starlink_tle_cache.json"
-    CACHE_DURATION_HOURS = 24
+    CELESTRAK_URL = f"{NetworkConstants.CELESTRAK_BASE_URL}{NetworkConstants.CELESTRAK_TLE_ENDPOINT}?GROUP={NetworkConstants.CELESTRAK_STARLINK_GROUP}&FORMAT={NetworkConstants.CELESTRAK_TLE_FORMAT}"
+    CACHE_FILE = f"{CacheConstants.DEFAULT_CACHE_DIR}/{CacheConstants.DEFAULT_CACHE_FILE}"
+    CACHE_DURATION_HOURS = CacheConstants.DEFAULT_CACHE_DURATION_HOURS
 
     def __init__(self, cache_dir: str = "data"):
         """初始化 Celestrak 資料庫
@@ -33,10 +37,21 @@ class CelestrakSatelliteRepository(SatelliteRepository):
         Args:
             cache_dir: 快取目錄
         """
-        self.cache_dir = Path(cache_dir)
+        # 驗證路徑安全性
+        cache_path = Path(cache_dir).resolve()
+        base_path = Path.cwd().resolve()
+
+        # 確保快取目錄在專案目錄內
+        try:
+            cache_path.relative_to(base_path)
+        except ValueError:
+            raise ValueError(f"Cache directory must be within project directory: {cache_dir}")
+
+        self.cache_dir = cache_path
         self.cache_dir.mkdir(exist_ok=True)
         self.cache_file = self.cache_dir / "starlink_tle_cache.json"
         self._satellites_cache: Optional[List[Satellite]] = None
+        self._satellites_index: Dict[str, Satellite] = {}
 
     async def get_all_satellites(self) -> List[Satellite]:
         """獲取所有衛星"""
@@ -51,11 +66,16 @@ class CelestrakSatelliteRepository(SatelliteRepository):
 
     async def get_satellite_by_id(self, satellite_id: str) -> Optional[Satellite]:
         """根據 ID 獲取衛星"""
-        all_satellites = await self.get_all_satellites()
-        for sat in all_satellites:
-            if sat.satellite_id == satellite_id:
-                return sat
-        return None
+        # 驗證衛星 ID 格式
+        if not self._validate_satellite_id(satellite_id):
+            logger.warning(f"Invalid satellite ID format: {satellite_id}")
+            return None
+
+        # 使用索引快速查找
+        if not self._satellites_index:
+            await self.get_all_satellites()
+
+        return self._satellites_index.get(satellite_id)
 
     async def get_satellites_by_name_pattern(self, pattern: str) -> List[Satellite]:
         """根據名稱模式獲取衛星"""
@@ -79,9 +99,11 @@ class CelestrakSatelliteRepository(SatelliteRepository):
             try:
                 with open(self.cache_file, "r") as f:
                     cache_data = json.load(f)
-                    return datetime.fromisoformat(cache_data.get("last_update"))
-            except:
-                pass
+                    last_update_str = cache_data.get("last_update")
+                    if last_update_str:
+                        return datetime.fromisoformat(last_update_str)
+            except (FileNotFoundError, json.JSONDecodeError, ValueError, KeyError) as e:
+                logger.warning(f"Unable to read cache data: {e}")
         return None
 
     async def _load_satellites(self) -> None:
@@ -110,10 +132,12 @@ class CelestrakSatelliteRepository(SatelliteRepository):
             cache_data = json.load(f)
 
         self._satellites_cache = []
+        self._satellites_index = {}
         for sat_data in cache_data.get("satellites", []):
             satellite = self._parse_satellite_data(sat_data)
             if satellite:
                 self._satellites_cache.append(satellite)
+                self._satellites_index[satellite.satellite_id] = satellite
 
     async def _load_from_network(self) -> None:
         """從網路載入"""
@@ -131,6 +155,9 @@ class CelestrakSatelliteRepository(SatelliteRepository):
         # 解析 TLE 資料
         satellites = self._parse_tle_data(tle_data)
         self._satellites_cache = satellites
+
+        # 建立索引
+        self._satellites_index = {sat.satellite_id: sat for sat in satellites}
 
         # 儲存到快取
         await self._save_to_cache(satellites)
@@ -161,21 +188,42 @@ class CelestrakSatelliteRepository(SatelliteRepository):
     def _create_satellite_from_tle(self, name: str, line1: str, line2: str) -> Optional[Satellite]:
         """從 TLE 創建衛星實體"""
         try:
+            # 驗證 TLE 格式
+            if not (
+                line1.startswith(SatelliteConstants.TLE_LINE1_PREFIX)
+                and line2.startswith(SatelliteConstants.TLE_LINE2_PREFIX)
+                and len(line1) >= SatelliteConstants.TLE_LINE_LENGTH
+                and len(line2) >= SatelliteConstants.TLE_LINE_LENGTH
+            ):
+                logger.warning(f"Invalid TLE format for satellite: {name}")
+                return None
+
             # 解析 TLE Line 1
-            satellite_id = line1[2:7].strip()
-            epoch_year = int(line1[18:20])
-            epoch_day = float(line1[20:32])
+            satellite_id = line1[SatelliteConstants.TLE_SATELLITE_ID_START : SatelliteConstants.TLE_SATELLITE_ID_END].strip()
+
+            # 驗證衛星 ID
+            if not self._validate_satellite_id(satellite_id):
+                logger.warning(f"Invalid satellite ID in TLE: {satellite_id}")
+                return None
+            epoch_year = int(line1[SatelliteConstants.TLE_EPOCH_YEAR_START : SatelliteConstants.TLE_EPOCH_YEAR_END])
+            epoch_day = float(line1[SatelliteConstants.TLE_EPOCH_DAY_START : SatelliteConstants.TLE_EPOCH_DAY_END])
 
             # 解析 TLE Line 2
-            inclination = float(line2[8:16])
-            raan = float(line2[17:25])
-            eccentricity = float("0." + line2[26:33])
-            arg_perigee = float(line2[34:42])
-            mean_anomaly = float(line2[43:51])
-            mean_motion = float(line2[52:63])
+            inclination = float(line2[SatelliteConstants.TLE_INCLINATION_START : SatelliteConstants.TLE_INCLINATION_END])
+            raan = float(line2[SatelliteConstants.TLE_RAAN_START : SatelliteConstants.TLE_RAAN_END])
+            eccentricity = float(
+                "0." + line2[SatelliteConstants.TLE_ECCENTRICITY_START : SatelliteConstants.TLE_ECCENTRICITY_END]
+            )
+            arg_perigee = float(line2[SatelliteConstants.TLE_ARG_PERIGEE_START : SatelliteConstants.TLE_ARG_PERIGEE_END])
+            mean_anomaly = float(line2[SatelliteConstants.TLE_MEAN_ANOMALY_START : SatelliteConstants.TLE_MEAN_ANOMALY_END])
+            mean_motion = float(line2[SatelliteConstants.TLE_MEAN_MOTION_START : SatelliteConstants.TLE_MEAN_MOTION_END])
 
             # 計算 epoch 時間
-            year = 2000 + epoch_year if epoch_year < 50 else 1900 + epoch_year
+            year = (
+                SatelliteConstants.YEAR_2000 + epoch_year
+                if epoch_year < SatelliteConstants.YEAR_CUTOFF
+                else SatelliteConstants.YEAR_1900 + epoch_year
+            )
             epoch = datetime(year, 1, 1) + timedelta(days=epoch_day - 1)
 
             # 創建軌道元素
@@ -192,8 +240,8 @@ class CelestrakSatelliteRepository(SatelliteRepository):
             # 創建衛星實體
             return Satellite(satellite_id=satellite_id, name=name, orbital_elements=orbital_elements, is_active=True)
 
-        except Exception:
-            # 解析失敗，返回 None
+        except (ValueError, IndexError) as e:
+            logger.error(f"Failed to parse TLE for {name}: {e}")
             return None
 
     def _parse_satellite_data(self, data: dict) -> Optional[Satellite]:
@@ -217,7 +265,8 @@ class CelestrakSatelliteRepository(SatelliteRepository):
                 launch_date=datetime.fromisoformat(data["launch_date"]) if data.get("launch_date") else None,
                 is_active=data.get("is_active", True),
             )
-        except Exception:
+        except (KeyError, ValueError, TypeError) as e:
+            logger.error(f"Failed to parse satellite data: {e}")
             return None
 
     async def _save_to_cache(self, satellites: List[Satellite]) -> None:
@@ -246,7 +295,7 @@ class CelestrakSatelliteRepository(SatelliteRepository):
         with open(self.cache_file, "w") as f:
             json.dump(cache_data, f, indent=2)
 
-
-# 修正 import
-from datetime import timedelta
-
+    def _validate_satellite_id(self, satellite_id: str) -> bool:
+        """驗證衛星 ID 格式"""
+        # 允許數字、字母和連字符
+        return bool(re.match(SatelliteConstants.SATELLITE_ID_PATTERN, satellite_id, re.IGNORECASE))

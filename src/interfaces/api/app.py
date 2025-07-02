@@ -2,19 +2,20 @@
 FastAPI 應用程式主入口
 """
 
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from datetime import datetime
-from typing import Optional, List
-from enum import Enum
 
-from ...infrastructure.container.container import get_container
-from ...application.use_cases.analyze_coverage_use_case import AnalyzeCoverageUseCase
-from ...application.use_cases.predict_coverage_use_case import PredictCoverageUseCase
 from ...application.dto.coverage_request import CoverageRequest, ObserverDTO
 from ...application.dto.prediction_request import PredictionRequest
+from ...application.use_cases.analyze_coverage_use_case import AnalyzeCoverageUseCase
+from ...application.use_cases.predict_coverage_use_case import PredictCoverageUseCase
 from ...domain.entities.prediction import PredictionTimeScale
+from ...infrastructure.container.container import get_container
 
 
 # Enums
@@ -52,7 +53,7 @@ class CoverageRequestModel(BaseModel):
 
 class PredictionRequestModel(BaseModel):
     """預測請求模型"""
-    
+
     observer_latitude: float = Field(..., ge=-90, le=90, description="觀測者緯度")
     observer_longitude: float = Field(..., ge=-180, le=180, description="觀測者經度")
     observer_altitude: float = Field(0.0, description="觀測者高度（公尺）")
@@ -61,7 +62,7 @@ class PredictionRequestModel(BaseModel):
     min_elevation: float = Field(25.0, ge=0, le=90, description="最小仰角（度）")
     satellite_ids: Optional[List[str]] = Field(None, description="要分析的衛星ID列表")
     min_satellites_for_window: int = Field(30, gt=0, description="最佳窗口的最少衛星數")
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -70,17 +71,13 @@ class PredictionRequestModel(BaseModel):
                 "observer_altitude": 10.0,
                 "time_scale": "medium_term",
                 "min_elevation": 25.0,
-                "min_satellites_for_window": 30
+                "min_satellites_for_window": 30,
             }
         }
 
 
 # 創建 FastAPI 應用
-app = FastAPI(
-    title="Starlink Taipei Satellite Analysis API", 
-    description="衛星覆蓋率分析與預測 API", 
-    version="2.1.0"
-)
+app = FastAPI(title="Starlink Taipei Satellite Analysis API", description="衛星覆蓋率分析與預測 API", version="2.1.0")
 
 # 添加 CORS 中間件
 app.add_middleware(
@@ -190,10 +187,10 @@ async def get_coverage(coverage_id: str):
 @app.post("/api/v1/predict")
 async def predict_coverage(request: PredictionRequestModel):
     """預測衛星覆蓋
-    
+
     Args:
         request: 預測請求
-        
+
     Returns:
         預測結果
     """
@@ -201,24 +198,22 @@ async def predict_coverage(request: PredictionRequestModel):
         # 獲取用例
         container = get_container()
         use_case = container.resolve(PredictCoverageUseCase)
-        
+
         # 轉換請求
         prediction_request = PredictionRequest(
             observer=ObserverDTO(
-                latitude=request.observer_latitude,
-                longitude=request.observer_longitude,
-                altitude=request.observer_altitude
+                latitude=request.observer_latitude, longitude=request.observer_longitude, altitude=request.observer_altitude
             ),
             time_scale=PredictionTimeScale(request.time_scale.value),
             start_time=request.start_time,
             min_elevation=request.min_elevation,
             satellite_ids=request.satellite_ids,
-            min_satellites_for_window=request.min_satellites_for_window
+            min_satellites_for_window=request.min_satellites_for_window,
         )
-        
+
         # 執行預測
         result = use_case.execute(prediction_request)
-        
+
         # 返回結果
         return {
             "status": "success",
@@ -231,27 +226,31 @@ async def predict_coverage(request: PredictionRequestModel):
                 "end_time": result.end_time,
                 "total_satellites": result.total_satellites,
                 "analyzed_satellites": result.analyzed_satellites,
-                "statistics": {
-                    "satellites": result.statistics.satellites,
-                    "elevation": result.statistics.elevation,
-                    "coverage": result.statistics.coverage,
-                    "optimal_windows_count": result.statistics.optimal_windows_count,
-                    "peak_hours": result.statistics.peak_hours
-                } if result.statistics else None,
+                "statistics": (
+                    {
+                        "satellites": result.statistics.satellites,
+                        "elevation": result.statistics.elevation,
+                        "coverage": result.statistics.coverage,
+                        "optimal_windows_count": result.statistics.optimal_windows_count,
+                        "peak_hours": result.statistics.peak_hours,
+                    }
+                    if result.statistics
+                    else None
+                ),
                 "optimal_windows": [
                     {
                         "start_time": window.start_time,
                         "end_time": window.end_time,
                         "avg_satellites": window.avg_satellites,
                         "max_elevation": window.max_elevation,
-                        "duration_minutes": window.duration_minutes
+                        "duration_minutes": window.duration_minutes,
                     }
                     for window in result.optimal_windows
                 ],
-                "prediction_points_count": len(result.prediction_points)
-            }
+                "prediction_points_count": len(result.prediction_points),
+            },
         }
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -262,4 +261,3 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

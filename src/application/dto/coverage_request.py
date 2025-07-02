@@ -10,6 +10,7 @@ from typing import Optional
 @dataclass
 class ObserverDTO:
     """觀測者 DTO"""
+
     latitude: float
     longitude: float
     altitude: float = 0.0
@@ -36,11 +37,7 @@ class CoverageRequest:
     def __post_init__(self):
         """驗證請求參數"""
         if self.observer is None:
-            self.observer = ObserverDTO(
-                latitude=25.0330,
-                longitude=121.5654,
-                altitude=0.0
-            )
+            self.observer = ObserverDTO(latitude=25.0330, longitude=121.5654, altitude=0.0)
 
         if not -90 <= self.observer.latitude <= 90:
             raise ValueError("緯度必須在 -90 到 90 之間")
@@ -53,4 +50,3 @@ class CoverageRequest:
 
         if not 0 <= self.elevation_mask <= 90:
             raise ValueError("最小仰角必須在 0 到 90 之間")
-

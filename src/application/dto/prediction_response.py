@@ -4,7 +4,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from ...domain.entities.prediction import Prediction, PredictionTimeScale
 
@@ -12,6 +12,7 @@ from ...domain.entities.prediction import Prediction, PredictionTimeScale
 @dataclass
 class PredictionPointDTO:
     """預測點 DTO"""
+
     timestamp: str
     predicted_satellites: int
     predicted_elevation: float
@@ -23,6 +24,7 @@ class PredictionPointDTO:
 @dataclass
 class OptimalWindowDTO:
     """最佳觀測窗口 DTO"""
+
     start_time: str
     end_time: str
     avg_satellites: float
@@ -33,6 +35,7 @@ class OptimalWindowDTO:
 @dataclass
 class PredictionStatisticsDTO:
     """預測統計 DTO"""
+
     satellites: Dict[str, float]
     elevation: Dict[str, float]
     coverage: Dict[str, float]
@@ -43,7 +46,7 @@ class PredictionStatisticsDTO:
 @dataclass
 class PredictionResponse:
     """預測響應
-    
+
     Attributes:
         prediction_id: 預測ID
         time_scale: 預測時間尺度
@@ -58,7 +61,7 @@ class PredictionResponse:
         statistics: 統計資訊
         metadata: 元資料
     """
-    
+
     prediction_id: str
     time_scale: str
     created_at: str
@@ -71,21 +74,16 @@ class PredictionResponse:
     optimal_windows: List[OptimalWindowDTO] = field(default_factory=list)
     statistics: PredictionStatisticsDTO = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     @classmethod
-    def from_domain(
-        cls,
-        prediction: Prediction,
-        total_satellites: int,
-        analyzed_satellites: int
-    ) -> "PredictionResponse":
+    def from_domain(cls, prediction: Prediction, total_satellites: int, analyzed_satellites: int) -> "PredictionResponse":
         """從領域實體創建響應 DTO
-        
+
         Args:
             prediction: 預測實體
             total_satellites: 總衛星數
             analyzed_satellites: 分析的衛星數
-            
+
         Returns:
             PredictionResponse: 響應 DTO
         """
@@ -97,11 +95,11 @@ class PredictionResponse:
                 predicted_elevation=point.predicted_elevation,
                 coverage_probability=point.coverage_probability,
                 uncertainty=point.uncertainty,
-                confidence_interval=point.confidence_interval
+                confidence_interval=point.confidence_interval,
             )
             for point in prediction.prediction_points
         ]
-        
+
         # 轉換最佳窗口
         optimal_windows = [
             OptimalWindowDTO(
@@ -109,28 +107,30 @@ class PredictionResponse:
                 end_time=window.end_time.isoformat(),
                 avg_satellites=window.avg_satellites,
                 max_elevation=window.max_elevation,
-                duration_minutes=window.duration_minutes
+                duration_minutes=window.duration_minutes,
             )
             for window in prediction.optimal_windows
         ]
-        
+
         # 轉換統計資訊
         stats = prediction.statistics
-        statistics = PredictionStatisticsDTO(
-            satellites=stats.get("satellites", {}),
-            elevation=stats.get("elevation", {}),
-            coverage=stats.get("coverage", {}),
-            optimal_windows_count=stats.get("optimal_windows_count", 0),
-            peak_hours=stats.get("peak_hours", [])
-        ) if stats else None
-        
+        statistics = (
+            PredictionStatisticsDTO(
+                satellites=stats.get("satellites", {}),
+                elevation=stats.get("elevation", {}),
+                coverage=stats.get("coverage", {}),
+                optimal_windows_count=stats.get("optimal_windows_count", 0),
+                peak_hours=stats.get("peak_hours", []),
+            )
+            if stats
+            else None
+        )
+
         # 提取觀測者位置（從元資料或使用預設值）
-        observer_location = prediction.metadata.get("observer_location", {
-            "latitude": 25.0330,
-            "longitude": 121.5654,
-            "altitude": 0.0
-        })
-        
+        observer_location = prediction.metadata.get(
+            "observer_location", {"latitude": 25.0330, "longitude": 121.5654, "altitude": 0.0}
+        )
+
         return cls(
             prediction_id=prediction.prediction_id,
             time_scale=prediction.time_scale.value,
@@ -143,5 +143,5 @@ class PredictionResponse:
             prediction_points=prediction_points,
             optimal_windows=optimal_windows,
             statistics=statistics,
-            metadata=prediction.metadata
+            metadata=prediction.metadata,
         )

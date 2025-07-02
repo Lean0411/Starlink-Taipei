@@ -2,18 +2,18 @@
 依賴注入容器 - 管理應用程式的依賴關係
 """
 
-from typing import Dict, Type, Any, Optional
 import inspect
+from typing import Any, Dict, Optional, Type
 
-from ...domain.repositories.satellite_repository import SatelliteRepository
-from ...domain.services.orbit_calculator import OrbitCalculator
-from ...domain.services.coverage_analyzer import CoverageAnalyzer
-from ...domain.services.prediction_service import PredictionService
 from ...application.use_cases.analyze_coverage_use_case import AnalyzeCoverageUseCase
 from ...application.use_cases.predict_coverage_use_case import PredictCoverageUseCase
-from ..repositories.celestrak_satellite_repository import CelestrakSatelliteRepository
-from ..external_services.skyfield_orbit_calculator import SkyfieldOrbitCalculator
+from ...domain.repositories.satellite_repository import SatelliteRepository
+from ...domain.services.coverage_analyzer import CoverageAnalyzer
+from ...domain.services.orbit_calculator import OrbitCalculator
+from ...domain.services.prediction_service import PredictionService
 from ..external_services.orbit_prediction_service import OrbitPredictionService
+from ..external_services.skyfield_orbit_calculator import SkyfieldOrbitCalculator
+from ..repositories.celestrak_satellite_repository import CelestrakSatelliteRepository
 
 
 class Container:
@@ -124,12 +124,12 @@ class Container:
         satellite_repository = self.resolve(SatelliteRepository)
         coverage_analyzer = self.resolve(CoverageAnalyzer)
         return AnalyzeCoverageUseCase(satellite_repository, coverage_analyzer)
-    
+
     def _create_prediction_service(self) -> PredictionService:
         """創建預測服務"""
         orbit_calculator = self.resolve(OrbitCalculator)
         return OrbitPredictionService(orbit_calculator)
-    
+
     def _create_predict_coverage_use_case(self) -> PredictCoverageUseCase:
         """創建預測覆蓋用例"""
         satellite_repository = self.resolve(SatelliteRepository)
@@ -157,4 +157,3 @@ def reset_container():
     """重置容器（主要用於測試）"""
     global _container
     _container = None
-

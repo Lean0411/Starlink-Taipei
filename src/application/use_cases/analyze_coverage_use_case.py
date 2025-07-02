@@ -2,13 +2,12 @@
 分析覆蓋率用例
 """
 
-
-from ..dto.coverage_request import CoverageRequest
-from ..dto.coverage_response import CoverageResponse
 from ...domain.entities.observer import Observer
-from ...domain.value_objects.position import Position
 from ...domain.repositories.satellite_repository import SatelliteRepository
 from ...domain.services.coverage_analyzer import CoverageAnalyzer
+from ...domain.value_objects.position import Position
+from ..dto.coverage_request import CoverageRequest
+from ..dto.coverage_response import CoverageResponse
 
 
 class AnalyzeCoverageUseCase:
@@ -75,4 +74,3 @@ class AnalyzeCoverageUseCase:
         response = CoverageResponse.from_domain(coverage, optimal_windows)
 
         return response
-

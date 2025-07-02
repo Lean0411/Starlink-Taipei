@@ -3,7 +3,7 @@
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from ...domain.entities.coverage import Coverage
 
@@ -119,4 +119,3 @@ class CoverageResponse:
             snapshots=snapshots_dto,
             optimal_windows=optimal_windows or [],
         )
-

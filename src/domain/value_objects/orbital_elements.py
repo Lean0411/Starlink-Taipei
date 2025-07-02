@@ -71,4 +71,3 @@ class OrbitalElements:
             bool: 是否為 LEO
         """
         return self.period_minutes < 128
-
