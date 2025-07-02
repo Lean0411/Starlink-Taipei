@@ -2,11 +2,7 @@
 預測覆蓋用例 - 處理預測請求的應用層邏輯
 """
 
-from datetime import datetime
-from typing import Optional
-
 from ...domain.entities.observer import Observer
-from ...domain.entities.prediction import PredictionTimeScale
 from ...domain.repositories.satellite_repository import SatelliteRepository
 from ...domain.services.prediction_service import PredictionService
 from ...domain.value_objects.position import Position

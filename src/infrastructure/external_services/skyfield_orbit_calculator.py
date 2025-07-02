@@ -61,12 +61,18 @@ class SkyfieldOrbitCalculator(OrbitCalculator):
         這是簡化版本，實際應用中需要完整的 TLE 格式
         """
         # TLE Line 1 格式（簡化）
-        return f"1 {satellite.satellite_id}U 00000A   {satellite.orbital_elements.epoch.strftime('%y%j.%f')[:14]}  .00000000  00000-0  00000-0 0  9999"
+        epoch_str = satellite.orbital_elements.epoch.strftime("%y%j.%f")[:14]
+        return f"1 {satellite.satellite_id}U 00000A   {epoch_str}  .00000000  00000-0  00000-0 0  9999"
 
     def _build_tle_line2(self, satellite: Satellite) -> str:
         """構建 TLE 第二行"""
         oe = satellite.orbital_elements
-        return f"2 {satellite.satellite_id} {oe.inclination:8.4f} {oe.raan:8.4f} {oe.eccentricity*1e7:07.0f} {oe.arg_perigee:8.4f} {oe.mean_anomaly:8.4f} {oe.mean_motion:11.8f}00000"
+        line2 = (
+            f"2 {satellite.satellite_id} {oe.inclination:8.4f} {oe.raan:8.4f} "
+            f"{oe.eccentricity*1e7:07.0f} {oe.arg_perigee:8.4f} "
+            f"{oe.mean_anomaly:8.4f} {oe.mean_motion:11.8f}00000"
+        )
+        return line2
 
     def calculate_position(self, satellite: Satellite, time: datetime) -> Position:
         """計算衛星位置

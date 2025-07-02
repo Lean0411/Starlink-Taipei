@@ -27,7 +27,7 @@ def test_python_version():
 def test_project_files_exist():
     """測試專案檔案存在"""
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
+
     # 檢查重要檔案存在
     assert os.path.exists(os.path.join(project_root, "satellite_analysis.py"))
     assert os.path.exists(os.path.join(project_root, "starlink.py"))
@@ -41,8 +41,9 @@ def test_environment():
     # 測試基本環境
     assert "PATH" in os.environ
     assert os.path.exists(sys.executable)
-    
+
     # 測試 Python 可執行
     import subprocess
+
     result = subprocess.run([sys.executable, "--version"], capture_output=True)
     assert result.returncode == 0

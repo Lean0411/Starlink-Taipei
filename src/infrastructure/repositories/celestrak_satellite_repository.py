@@ -27,7 +27,10 @@ logger = logging.getLogger(__name__)
 class CelestrakSatelliteRepository(SatelliteRepository):
     """從 Celestrak 獲取衛星 TLE 資料的資料庫實作"""
 
-    CELESTRAK_URL = f"{NetworkConstants.CELESTRAK_BASE_URL}{NetworkConstants.CELESTRAK_TLE_ENDPOINT}?GROUP={NetworkConstants.CELESTRAK_STARLINK_GROUP}&FORMAT={NetworkConstants.CELESTRAK_TLE_FORMAT}"
+    CELESTRAK_URL = (
+        f"{NetworkConstants.CELESTRAK_BASE_URL}{NetworkConstants.CELESTRAK_TLE_ENDPOINT}"
+        f"?GROUP={NetworkConstants.CELESTRAK_STARLINK_GROUP}&FORMAT={NetworkConstants.CELESTRAK_TLE_FORMAT}"
+    )
     CACHE_FILE = f"{CacheConstants.DEFAULT_CACHE_DIR}/{CacheConstants.DEFAULT_CACHE_FILE}"
     CACHE_DURATION_HOURS = CacheConstants.DEFAULT_CACHE_DURATION_HOURS
 

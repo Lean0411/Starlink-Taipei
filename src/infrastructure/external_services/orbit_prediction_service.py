@@ -88,9 +88,6 @@ class OrbitPredictionService(PredictionService):
         # 使用軌道計算器預測每顆衛星的位置和可見性
         for satellite in satellites:
             try:
-                # 計算衛星在預測時間的位置
-                position = self.orbit_calculator.calculate_position(satellite, prediction_time)
-
                 # 檢查是否可見
                 is_visible, elevation = self.orbit_calculator.calculate_visibility(
                     satellite, observer.position, prediction_time, observer.min_elevation

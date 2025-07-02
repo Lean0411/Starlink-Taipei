@@ -63,7 +63,7 @@ async def main():
         satellite_filter=args.satellite_filter,
     )
 
-    print(f"🛰️  Starlink 衛星覆蓋率分析")
+    print("🛰️  Starlink 衛星覆蓋率分析")
     print(f"📍 位置: {args.lat:.4f}°N, {args.lon:.4f}°E")
     print(f"🕐 時間: {start_time.strftime('%Y-%m-%d %H:%M:%S')} (持續 {args.duration} 分鐘)")
     print(f"📐 最小仰角: {args.min_elevation}°")
@@ -146,7 +146,7 @@ def print_json(result, output_path):
     }
 
     if output_path:
-        print(f"\n結果已輸出為 JSON 格式")
+        print("\n結果已輸出為 JSON 格式")
     else:
         print(json.dumps(data, indent=2, ensure_ascii=False))
 
