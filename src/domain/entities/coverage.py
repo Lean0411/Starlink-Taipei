@@ -75,6 +75,7 @@ class Coverage:
     """覆蓋率分析結果實體
 
     Attributes:
+        coverage_id: 覆蓋分析 ID
         observer_name: 觀測者名稱
         start_time: 分析開始時間
         end_time: 分析結束時間
@@ -84,6 +85,7 @@ class Coverage:
         metadata: 額外的元資料
     """
 
+    coverage_id: str
     observer_name: str
     start_time: datetime
     end_time: datetime

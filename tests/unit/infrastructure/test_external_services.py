@@ -20,13 +20,14 @@ class TestSkyfieldOrbitCalculator:
             satellite_id="47562",
             name="STARLINK-1234",
             orbital_elements=OrbitalElements(
-                semi_major_axis=6778.137,  # km
-                eccentricity=0.0001,
-                inclination=53.0,
-                right_ascension=100.0,
-                argument_of_perigee=0.0,
-                mean_anomaly=0.0,
                 epoch=datetime(2025, 1, 1, tzinfo=timezone.utc),
+                inclination=53.0,
+                raan=100.0,  # Right Ascension of Ascending Node
+                eccentricity=0.0001,
+                arg_perigee=0.0,  # Argument of Perigee
+                mean_anomaly=0.0,
+                mean_motion=15.06390000,  # 約 90 分鐘軌道週期
+                bstar=0.00012345,
             ),
             is_active=True,
         )
@@ -54,7 +55,7 @@ class TestSkyfieldOrbitCalculator:
         mock_subpoint.elevation.km = 400.0
         mock_geocentric.subpoint.return_value = mock_subpoint
 
-        with patch.object(SkyfieldOrbitCalculator, "_create_skyfield_satellite", return_value=mock_sat):
+        with patch.object(SkyfieldOrbitCalculator, "_get_skyfield_satellite", return_value=mock_sat):
             calculator = SkyfieldOrbitCalculator()
             position = calculator.calculate_position(sample_satellite, datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc))
 
@@ -118,26 +119,20 @@ class TestSkyfieldOrbitCalculator:
             assert passes[0][1] == datetime(2025, 1, 1, 1, 10, 0, tzinfo=timezone.utc)
             assert passes[0][2] == 45.0
 
-    def test_create_skyfield_satellite(self):
-        """測試創建 Skyfield 衛星對象"""
+    def test_get_skyfield_satellite(self, sample_satellite):
+        """測試獲取 Skyfield 衛星對象"""
         with patch("skyfield.api.load") as mock_load:
             mock_ts = Mock()
+            mock_timescale = Mock()
+            mock_ts.timescale = mock_timescale
             mock_load.return_value = mock_ts
-
-            calculator = SkyfieldOrbitCalculator()
-
-            # TLE 格式
-            tle_lines = [
-                "STARLINK-1234",
-                "1 47562U 21009A   25001.50000000  .00001234  00000-0  12345-4 0  9999",
-                "2 47562  53.0540  100.1234   0001500  90.0000 270.1234  15.06390000123456",
-            ]
 
             with patch("skyfield.api.EarthSatellite") as mock_earth_satellite:
                 mock_sat = Mock()
                 mock_earth_satellite.return_value = mock_sat
 
-                result = calculator._create_skyfield_satellite(tle_lines)
+                calculator = SkyfieldOrbitCalculator()
+                result = calculator._get_skyfield_satellite(sample_satellite)
 
                 assert result == mock_sat
                 mock_earth_satellite.assert_called_once()
@@ -174,7 +169,7 @@ class TestSkyfieldOrbitCalculator:
         mock_topocentric.altaz.return_value = mock_alt_az
         mock_difference.at.return_value = mock_topocentric
 
-        with patch.object(SkyfieldOrbitCalculator, "_create_skyfield_satellite") as mock_create:
+        with patch.object(SkyfieldOrbitCalculator, "_get_skyfield_satellite") as mock_create:
             mock_sat = Mock()
             mock_sat.__sub__ = Mock(return_value=mock_difference)
             mock_create.return_value = mock_sat

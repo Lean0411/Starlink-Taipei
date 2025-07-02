@@ -37,18 +37,20 @@ class AnalyzeCoverageUseCase:
         """
         # 1. 創建觀測者
         observer_position = Position(
-            latitude=request.observer_latitude, longitude=request.observer_longitude, elevation=request.observer_elevation
+            latitude=request.observer.latitude, 
+            longitude=request.observer.longitude, 
+            elevation=request.observer.altitude
         )
 
         observer = Observer(
-            observer_id=f"observer-{request.observer_latitude}-{request.observer_longitude}",
+            observer_id=f"observer-{request.observer.latitude}-{request.observer.longitude}",
             name="User Observer",
             position=observer_position,
-            min_elevation=request.min_elevation,
+            min_elevation=request.elevation_mask,
         )
 
         # 2. 獲取衛星列表
-        if request.satellite_filter:
+        if hasattr(request, 'satellite_filter') and request.satellite_filter:
             satellites = await self.satellite_repository.get_satellites_by_name_pattern(request.satellite_filter)
         else:
             satellites = await self.satellite_repository.get_active_satellites()
@@ -61,8 +63,8 @@ class AnalyzeCoverageUseCase:
             satellites=satellites,
             observer=observer,
             start_time=request.start_time,
-            duration_minutes=request.duration_minutes,
-            interval_minutes=request.interval_minutes,
+            duration_minutes=int((request.end_time - request.start_time).total_seconds() / 60),
+            interval_minutes=request.time_step_minutes,
         )
 
         # 4. 找出最佳觀測窗口

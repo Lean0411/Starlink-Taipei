@@ -51,7 +51,7 @@ class CoverageAnalyzer:
 
         coverage = Coverage(
             coverage_id=coverage_id,
-            observer=observer,
+            observer_name=observer.name,
             start_time=start_time,
             end_time=end_time,
             metadata={"total_satellites": len(satellites), "interval_minutes": interval_minutes},
