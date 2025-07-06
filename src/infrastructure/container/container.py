@@ -5,8 +5,11 @@
 import inspect
 from typing import Any, Dict, Optional, Type
 
+from ...application.services.satellite_service import SatelliteService
 from ...application.use_cases.analyze_coverage_use_case import AnalyzeCoverageUseCase
+from ...application.use_cases.get_coverage_use_case import GetCoverageUseCase
 from ...application.use_cases.predict_coverage_use_case import PredictCoverageUseCase
+from ...domain.repositories.coverage_repository import CoverageRepository
 from ...domain.repositories.satellite_repository import SatelliteRepository
 from ...domain.services.coverage_analyzer import CoverageAnalyzer
 from ...domain.services.orbit_calculator import OrbitCalculator
@@ -14,6 +17,7 @@ from ...domain.services.prediction_service import PredictionService
 from ..external_services.orbit_prediction_service import OrbitPredictionService
 from ..external_services.skyfield_orbit_calculator import SkyfieldOrbitCalculator
 from ..repositories.celestrak_satellite_repository import CelestrakSatelliteRepository
+from ..repositories.in_memory_coverage_repository import InMemoryCoverageRepository
 
 
 class Container:
@@ -33,13 +37,16 @@ class Container:
         # 註冊基礎設施服務
         self.register_singleton(OrbitCalculator, SkyfieldOrbitCalculator)
         self.register_singleton(SatelliteRepository, CelestrakSatelliteRepository)
+        self.register_singleton(CoverageRepository, InMemoryCoverageRepository)
 
         # 註冊領域服務
         self.register_factory(CoverageAnalyzer, self._create_coverage_analyzer)
         self.register_factory(PredictionService, self._create_prediction_service)
 
         # 註冊應用服務
+        self.register_factory(SatelliteService, self._create_satellite_service)
         self.register_factory(AnalyzeCoverageUseCase, self._create_analyze_coverage_use_case)
+        self.register_factory(GetCoverageUseCase, self._create_get_coverage_use_case)
         self.register_factory(PredictCoverageUseCase, self._create_predict_coverage_use_case)
 
     def register_singleton(self, interface: Type, implementation: Type):
@@ -114,6 +121,11 @@ class Container:
 
         return cls(**kwargs)
 
+    def _create_satellite_service(self) -> SatelliteService:
+        """創建衛星服務"""
+        orbit_calculator = self.resolve(OrbitCalculator)
+        return SatelliteService(orbit_calculator)
+
     def _create_coverage_analyzer(self) -> CoverageAnalyzer:
         """創建覆蓋率分析器"""
         orbit_calculator = self.resolve(OrbitCalculator)
@@ -123,13 +135,19 @@ class Container:
         """創建分析覆蓋率用例"""
         satellite_repository = self.resolve(SatelliteRepository)
         coverage_analyzer = self.resolve(CoverageAnalyzer)
-        return AnalyzeCoverageUseCase(satellite_repository, coverage_analyzer)
+        coverage_repository = self.resolve(CoverageRepository)
+        return AnalyzeCoverageUseCase(satellite_repository, coverage_analyzer, coverage_repository)
 
     def _create_prediction_service(self) -> PredictionService:
         """創建預測服務"""
         orbit_calculator = self.resolve(OrbitCalculator)
         return OrbitPredictionService(orbit_calculator)
 
+    def _create_get_coverage_use_case(self) -> GetCoverageUseCase:
+        """創建獲取覆蓋率用例"""
+        coverage_repository = self.resolve(CoverageRepository)
+        return GetCoverageUseCase(coverage_repository)
+    
     def _create_predict_coverage_use_case(self) -> PredictCoverageUseCase:
         """創建預測覆蓋用例"""
         satellite_repository = self.resolve(SatelliteRepository)

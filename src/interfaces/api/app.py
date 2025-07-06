@@ -88,6 +88,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 添加錯誤處理中間件
+from .middleware.error_handler import ErrorHandlerMiddleware
+app.add_middleware(ErrorHandlerMiddleware)
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -216,8 +220,55 @@ async def analyze_coverage(request: CoverageRequestModel):
             },
         }
 
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # 錯誤會被中間件捕獲並處理
+        raise
+
+
+@app.get("/api/v1/coverage")
+async def list_coverage_analyses():
+    """列出所有覆蓋率分析結果
+    
+    Returns:
+        覆蓋率分析列表
+    """
+    try:
+        container = get_container()
+        from ...domain.repositories.coverage_repository import CoverageRepository
+        coverage_repo = container.resolve(CoverageRepository)
+        
+        # 獲取所有分析結果（這是簡化版本，實際應該有分頁）
+        if hasattr(coverage_repo, 'get_all'):
+            all_analyses = coverage_repo.get_all()
+            
+            return {
+                "status": "success",
+                "data": {
+                    "analyses": [
+                        {
+                            "coverage_id": coverage_id,
+                            "start_time": coverage.start_time,
+                            "end_time": coverage.end_time,
+                            "observer_location": {
+                                "latitude": coverage.observer.position.latitude,
+                                "longitude": coverage.observer.position.longitude
+                            }
+                        }
+                        for coverage_id, coverage in all_analyses.items()
+                    ],
+                    "total": len(all_analyses)
+                }
+            }
+        else:
+            return {
+                "status": "success",
+                "data": {
+                    "analyses": [],
+                    "total": 0,
+                    "message": "列表功能尚未完全實作"
+                }
+            }
+            
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"內部錯誤: {str(e)}")
 
@@ -232,8 +283,43 @@ async def get_coverage(coverage_id: str):
     Returns:
         覆蓋率分析結果
     """
-    # TODO: 實作從儲存中獲取結果
-    raise HTTPException(status_code=501, detail="尚未實作")
+    try:
+        # 獲取用例
+        container = get_container()
+        from ...application.use_cases.get_coverage_use_case import GetCoverageUseCase
+        use_case = container.resolve(GetCoverageUseCase)
+        
+        # 執行查詢
+        result = await use_case.execute(coverage_id)
+        
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"找不到覆蓋率分析結果: {coverage_id}")
+        
+        # 返回結果
+        return {
+            "status": "success",
+            "data": {
+                "coverage_id": result.coverage_id,
+                "observer": result.observer,
+                "start_time": result.start_time,
+                "end_time": result.end_time,
+                "statistics": {
+                    "duration_minutes": result.statistics.duration_minutes,
+                    "average_visible_count": result.statistics.average_visible_count,
+                    "max_visible_count": result.statistics.max_visible_count,
+                    "min_visible_count": result.statistics.min_visible_count,
+                    "coverage_percentage": result.statistics.coverage_percentage,
+                    "total_snapshots": result.statistics.total_snapshots,
+                },
+                "optimal_windows": result.optimal_windows,
+                "snapshots_count": len(result.snapshots),
+            },
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"內部錯誤: {str(e)}")
 
 
 @app.post("/api/v1/predict")
@@ -303,10 +389,9 @@ async def predict_coverage(request: PredictionRequestModel):
             },
         }
 
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"內部錯誤: {str(e)}")
+        # 錯誤會被中間件捕獲並處理
+        raise
 
 
 if __name__ == "__main__":

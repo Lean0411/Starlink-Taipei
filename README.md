@@ -91,19 +91,43 @@ Starlink-Taipei/
 
 ## 快速開始
 
-### 簡化版（推薦新手）
+### 安裝方式（使用 pyproject.toml）
 
 ```bash
-# 啟動 Shiny 網頁介面
-python starlink.py shiny
+# 基本安裝
+pip install -e .
 
-# 或執行衛星分析
-python starlink.py analyze --duration 30
+# 包含開發工具
+pip install -e ".[dev]"
+
+# 包含 R 整合（可選）
+pip install -e ".[r-integration]"
+
+# 完整安裝（所有功能）
+pip install -e ".[all]"
 ```
 
-啟動後訪問 http://localhost:3838 即可使用。
+### 啟動服務
 
-### 完整安裝
+```bash
+# 啟動 API 服務
+python -m src.interfaces.api.app
+
+# 啟動 Shiny UI（另開終端）
+python -m src.interfaces.shiny.app
+```
+
+啟動後訪問：
+- Shiny UI: http://localhost:3838
+- API 文檔: http://localhost:8000/docs
+
+### 從 requirements.txt 遷移
+
+如果您之前使用 requirements.txt，執行遷移腳本：
+
+```bash
+python migrate_to_pyproject.py
+```
 
 詳細的安裝步驟請參考 [安裝指南](./docs/user-guide/installation.md)。
 

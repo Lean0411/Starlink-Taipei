@@ -37,10 +37,17 @@ class Satellite:
 
         Returns:
             Position: 衛星位置
+            
+        Note:
+            這個方法需要由應用層或基礎設施層的服務來實現。
+            在 Clean Architecture 中，實體不應包含複雜的計算邏輯。
+            請使用 OrbitCalculator 服務來計算位置。
         """
-        # 這裡會委託給領域服務來計算
-        # 避免在實體中放入複雜的計算邏輯
-        raise NotImplementedError("Position calculation should be done by domain service")
+        # 這是一個標記方法，提醒開發者使用領域服務
+        raise NotImplementedError(
+            "Position calculation should be done by domain service. "
+            "Use OrbitCalculator.calculate_position(satellite, time) instead."
+        )
 
     def is_visible_from(self, observer_position: Position, time: datetime) -> bool:
         """檢查衛星是否從觀測點可見
