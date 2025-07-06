@@ -107,6 +107,9 @@ Thumbs.db
 *.tle
 starlink_latest.tle
 
+# Cache files
+data/starlink_tle_cache.*
+
 # Conda
 .conda/
 

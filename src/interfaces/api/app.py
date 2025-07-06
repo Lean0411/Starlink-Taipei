@@ -113,6 +113,58 @@ async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 
+@app.get("/satellites")
+async def get_satellites(
+    limit: int = 100,
+    offset: int = 0,
+    active_only: bool = True
+):
+    """獲取衛星列表
+    
+    Args:
+        limit: 返回的衛星數量限制
+        offset: 偏移量（用於分頁）
+        active_only: 是否只返回活躍的衛星
+        
+    Returns:
+        衛星列表
+    """
+    try:
+        container = get_container()
+        satellite_repo = container.resolve("satellite_repository")
+        
+        # 獲取所有衛星
+        all_satellites = satellite_repo.get_active_satellites() if active_only else satellite_repo.find_all()
+        
+        # 應用分頁
+        total = len(all_satellites)
+        satellites = all_satellites[offset:offset + limit]
+        
+        return {
+            "status": "success",
+            "data": {
+                "satellites": [
+                    {
+                        "id": sat.satellite_id,
+                        "name": sat.name,
+                        "norad_id": sat.norad_id,
+                        "is_active": sat.is_active,
+                        "last_updated": sat.last_updated.isoformat() if sat.last_updated else None
+                    }
+                    for sat in satellites
+                ],
+                "pagination": {
+                    "total": total,
+                    "limit": limit,
+                    "offset": offset,
+                    "has_more": offset + limit < total
+                }
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"無法獲取衛星列表: {str(e)}")
+
+
 @app.post("/api/v1/coverage/analyze")
 async def analyze_coverage(request: CoverageRequestModel):
     """分析衛星覆蓋率

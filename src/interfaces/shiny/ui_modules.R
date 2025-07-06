@@ -107,6 +107,10 @@ real_time_tracking_ui <- function(id) {
             multiple = TRUE
           ),
           
+          tags$small("提示：只顯示前100顆活躍衛星以提升效能"),
+          br(),
+          br(),
+          
           actionButton(
             ns("refresh"),
             "更新位置",
@@ -283,25 +287,42 @@ coverage_analysis_server <- function(id, api_client) {
 
 real_time_tracking_server <- function(id, api_client) {
   moduleServer(id, function(input, output, session) {
-    # 載入衛星列表
+    # 載入衛星列表 (只載入前100顆活躍衛星)
     satellites <- reactive({
-      api_client$get_satellites()
+      api_client$get_satellites(limit = 100, offset = 0, active_only = TRUE)
     })
     
     observe({
       sat_list <- satellites()
-      if (!is.null(sat_list) && !is.null(sat_list$satellites)) {
+      if (!is.null(sat_list) && !is.null(sat_list$data) && !is.null(sat_list$data$satellites)) {
+        # 建立選項列表
+        satellite_choices <- setNames(
+          sapply(sat_list$data$satellites, function(s) s$id),
+          sapply(sat_list$data$satellites, function(s) paste(s$name, "-", s$norad_id))
+        )
+        
         updateSelectInput(
           session,
           "satellite_select",
-          choices = sat_list$satellites
+          choices = satellite_choices,
+          selected = character(0)
         )
+        
+        # 如果有更多衛星，顯示提示
+        if (sat_list$data$pagination$has_more) {
+          showNotification(
+            paste("顯示前", sat_list$data$pagination$limit, "顆衛星，共", 
+                  sat_list$data$pagination$total, "顆"),
+            type = "message",
+            duration = 5
+          )
+        }
       }
     })
     
     # 更新位置
     observeEvent(input$refresh, {
-      showNotification("更新衛星位置...", type = "info")
+      showNotification("更新衛星位置...", type = "message")
     })
   })
 }
@@ -309,7 +330,7 @@ real_time_tracking_server <- function(id, api_client) {
 statistics_server <- function(id, api_client) {
   moduleServer(id, function(input, output, session) {
     observeEvent(input$generate_stats, {
-      showNotification("生成統計報告...", type = "info")
+      showNotification("生成統計報告...", type = "message")
     })
   })
 }

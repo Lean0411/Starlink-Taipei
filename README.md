@@ -4,6 +4,26 @@
 
 一個專為分析 SpaceX Starlink 衛星在台北地區覆蓋情況而設計的先進預測系統，整合了傳統天體力學模型與現代深度學習技術。
 
+## 重要提示：Clean Architecture 重構進行中
+
+本專案正在進行 Clean Architecture 重構。新的架構位於 `src/` 目錄下，舊版程式碼已移至 `legacy/` 目錄供參考。
+
+### 專案結構
+```
+Starlink-Taipei/
+├── src/              # 新架構程式碼 (主要開發)
+│   ├── domain/       # 核心業務邏輯
+│   ├── application/  # 應用程式服務
+│   ├── infrastructure/ # 外部介面實作
+│   └── interfaces/   # UI 和 API 介面
+├── legacy/           # 舊版程式碼 (僅供參考)
+│   ├── python/       # 原始 Python 腳本
+│   └── r/            # 原始 R Shiny 應用
+├── tests/            # 測試檔案
+├── docs/             # 文件
+└── config/           # 設定檔案
+```
+
 ## 當前系統狀態
 
 **系統狀態：正常運行中** | 網頁應用: http://localhost:3838 | CI/CD: ✅

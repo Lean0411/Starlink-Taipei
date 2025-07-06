@@ -61,10 +61,17 @@ ApiClient <- R6Class("ApiClient",
       })
     },
     
-    # 獲取衛星列表
-    get_satellites = function() {
+    # 獲取衛星列表 (支援分頁)
+    get_satellites = function(limit = 100, offset = 0, active_only = TRUE) {
       tryCatch({
-        response <- GET(paste0(self$base_url, "/satellites"))
+        response <- GET(
+          paste0(self$base_url, "/satellites"),
+          query = list(
+            limit = limit,
+            offset = offset,
+            active_only = tolower(as.character(active_only))
+          )
+        )
         if (status_code(response) == 200) {
           return(content(response, "parsed"))
         } else {
