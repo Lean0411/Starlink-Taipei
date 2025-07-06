@@ -77,15 +77,15 @@ jobs:
     
     - name: Lint with flake8
       run: |
-        # 只檢查主要的 Python 檔案（排除 scripts 等目錄）
-        flake8 satellite_analysis.py starlink.py simple_analysis.py src/ tests/ --config=.flake8
+        # 只檢查主要的 Python 檔案（排除 scripts 和 legacy 等目錄）
+        flake8 src/ tests/ --config=.flake8
     
     - name: Check formatting with black
       run: |
         # 只檢查主要的 Python 檔案
-        black --check --diff satellite_analysis.py starlink.py simple_analysis.py src/ tests/
+        black --check --diff src/ tests/
     
     - name: Check import ordering with isort
       run: |
         # 只檢查主要的 Python 檔案
-        isort --check-only --diff satellite_analysis.py starlink.py simple_analysis.py src/ tests/
+        isort --check-only --diff src/ tests/
