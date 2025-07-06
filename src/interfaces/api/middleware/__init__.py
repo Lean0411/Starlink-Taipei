@@ -1,1 +1,2 @@
-"""API -“ö"""
+# -*- coding: utf-8 -*-
+"""API middleware"""

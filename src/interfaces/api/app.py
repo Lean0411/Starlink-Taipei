@@ -16,6 +16,9 @@ from ...application.use_cases.analyze_coverage_use_case import AnalyzeCoverageUs
 from ...application.use_cases.predict_coverage_use_case import PredictCoverageUseCase
 from ...domain.entities.prediction import PredictionTimeScale
 from ...infrastructure.container.container import get_container
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Enums
@@ -97,8 +100,19 @@ app.add_middleware(ErrorHandlerMiddleware)
 async def startup_event():
     """應用啟動事件"""
     # 初始化容器
-    get_container()
-    # 可以在這裡預載入資料
+    container = get_container()
+    
+    # 檢查快取服務
+    try:
+        from ...domain.services.cache_service import CacheService
+        cache_service = container.resolve(CacheService)
+        is_connected = await cache_service.is_connected()
+        if is_connected:
+            logger.info("快取服務已連線")
+        else:
+            logger.warning("快取服務未連線，使用後備方案")
+    except Exception as e:
+        logger.error(f"快取服務初始化失敗: {e}")
 
 
 @app.get("/")
@@ -135,6 +149,21 @@ async def get_satellites(
     """
     try:
         container = get_container()
+        
+        # 嘗試使用快取
+        from ...domain.services.cache_service import CacheService
+        cache_service = container.resolve(CacheService)
+        
+        # 生成快取鍵
+        cache_key = f"starlink_taipei:satellites:{active_only}:{limit}:{offset}"
+        
+        # 嘗試從快取獲取
+        cached_response = await cache_service.get(cache_key)
+        if cached_response:
+            logger.info(f"衛星列表快取命中: {cache_key}")
+            return cached_response
+        
+        # 從資料庫獲取
         satellite_repo = container.resolve("satellite_repository")
         
         # 獲取所有衛星
@@ -144,7 +173,7 @@ async def get_satellites(
         total = len(all_satellites)
         satellites = all_satellites[offset:offset + limit]
         
-        return {
+        response = {
             "status": "success",
             "data": {
                 "satellites": [
@@ -165,6 +194,15 @@ async def get_satellites(
                 }
             }
         }
+        
+        # 儲存到快取
+        await cache_service.set(
+            cache_key,
+            response,
+            ttl=300  # 5 分鐘
+        )
+        
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"無法獲取衛星列表: {str(e)}")
 

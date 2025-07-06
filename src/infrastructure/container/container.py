@@ -4,20 +4,29 @@
 
 import inspect
 from typing import Any, Dict, Optional, Type
+import os
+import logging
 
 from ...application.services.satellite_service import SatelliteService
+from ...application.services.batch_processing_service import BatchProcessingService
 from ...application.use_cases.analyze_coverage_use_case import AnalyzeCoverageUseCase
 from ...application.use_cases.get_coverage_use_case import GetCoverageUseCase
 from ...application.use_cases.predict_coverage_use_case import PredictCoverageUseCase
 from ...domain.repositories.coverage_repository import CoverageRepository
 from ...domain.repositories.satellite_repository import SatelliteRepository
 from ...domain.services.coverage_analyzer import CoverageAnalyzer
+from ...domain.services.optimized_coverage_analyzer import OptimizedCoverageAnalyzer
 from ...domain.services.orbit_calculator import OrbitCalculator
 from ...domain.services.prediction_service import PredictionService
+from ...domain.services.cache_service import CacheService
 from ..external_services.orbit_prediction_service import OrbitPredictionService
 from ..external_services.skyfield_orbit_calculator import SkyfieldOrbitCalculator
 from ..repositories.celestrak_satellite_repository import CelestrakSatelliteRepository
 from ..repositories.in_memory_coverage_repository import InMemoryCoverageRepository
+from ..cache.redis_cache_service import RedisCacheService, REDIS_AVAILABLE
+from ..cache.memory_cache_service import MemoryCacheService
+
+logger = logging.getLogger(__name__)
 
 
 class Container:
@@ -34,6 +43,9 @@ class Container:
 
     def _setup(self):
         """設定依賴關係"""
+        # 註冊快取服務
+        self.register_factory(CacheService, self._create_cache_service)
+        
         # 註冊基礎設施服務
         self.register_singleton(OrbitCalculator, SkyfieldOrbitCalculator)
         self.register_singleton(SatelliteRepository, CelestrakSatelliteRepository)
@@ -44,6 +56,7 @@ class Container:
         self.register_factory(PredictionService, self._create_prediction_service)
 
         # 註冊應用服務
+        self.register_factory(BatchProcessingService, self._create_batch_processing_service)
         self.register_factory(SatelliteService, self._create_satellite_service)
         self.register_factory(AnalyzeCoverageUseCase, self._create_analyze_coverage_use_case)
         self.register_factory(GetCoverageUseCase, self._create_get_coverage_use_case)
@@ -126,10 +139,16 @@ class Container:
         orbit_calculator = self.resolve(OrbitCalculator)
         return SatelliteService(orbit_calculator)
 
-    def _create_coverage_analyzer(self) -> CoverageAnalyzer:
-        """創建覆蓋率分析器"""
+    def _create_batch_processing_service(self) -> BatchProcessingService:
+        """創建批次處理服務"""
         orbit_calculator = self.resolve(OrbitCalculator)
-        return CoverageAnalyzer(orbit_calculator)
+        return BatchProcessingService(orbit_calculator, batch_size=500)
+    
+    def _create_coverage_analyzer(self) -> CoverageAnalyzer:
+        """創建覆蓋率分析器（使用優化版本）"""
+        orbit_calculator = self.resolve(OrbitCalculator)
+        batch_processor = self.resolve(BatchProcessingService)
+        return OptimizedCoverageAnalyzer(orbit_calculator, batch_processor)
 
     def _create_analyze_coverage_use_case(self) -> AnalyzeCoverageUseCase:
         """創建分析覆蓋率用例"""
@@ -153,6 +172,34 @@ class Container:
         satellite_repository = self.resolve(SatelliteRepository)
         prediction_service = self.resolve(PredictionService)
         return PredictCoverageUseCase(satellite_repository, prediction_service)
+    
+    def _create_cache_service(self) -> CacheService:
+        """創建快取服務
+        
+        優先使用 Redis，如果不可用則使用記憶體快取
+        """
+        # 從環境變數讀取設定
+        redis_host = os.getenv("REDIS_HOST", "localhost")
+        redis_port = int(os.getenv("REDIS_PORT", "6379"))
+        redis_password = os.getenv("REDIS_PASSWORD", None)
+        
+        if REDIS_AVAILABLE:
+            try:
+                # 嘗試建立 Redis 連線
+                cache_service = RedisCacheService(
+                    host=redis_host,
+                    port=redis_port,
+                    password=redis_password
+                )
+                logger.info("使用 Redis 快取服務")
+                return cache_service
+            except Exception as e:
+                logger.warning(f"無法連線到 Redis，切換到記憶體快取: {e}")
+        else:
+            logger.warning("Redis 套件未安裝，使用記憶體快取")
+        
+        # 後備方案：使用記憶體快取
+        return MemoryCacheService(max_size=10000)
 
 
 # 全域容器實例

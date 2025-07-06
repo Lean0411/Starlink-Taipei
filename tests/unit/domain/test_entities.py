@@ -1,175 +1,272 @@
-"""領域實體的單元測試"""
+"""
+領域實體的單元測試
+"""
 
+from datetime import datetime
 import pytest
-from datetime import datetime, timezone
+
 from src.domain.entities.satellite import Satellite
 from src.domain.entities.observer import Observer
-from src.domain.entities.coverage import Coverage, CoverageWindow
-from src.domain.value_objects.position import Position
+from src.domain.entities.coverage_analysis import (
+    CoverageSnapshot, CoverageStatistics, OptimalWindow, CoverageAnalysis
+)
 from src.domain.value_objects.orbital_elements import OrbitalElements
+from src.domain.value_objects.position import Position
 
 
 class TestSatellite:
-    """測試衛星實體"""
-
+    """衛星實體測試"""
+    
     def test_satellite_creation(self):
-        """測試衛星實體創建"""
+        """測試衛星建立"""
         orbital_elements = OrbitalElements(
-            epoch=datetime.now(timezone.utc),
-            inclination=53.0,  # degrees
-            raan=0.0,  # Right Ascension of Ascending Node
-            eccentricity=0.0001,
-            arg_perigee=0.0,  # Argument of Perigee
-            mean_anomaly=0.0,
-            mean_motion=15.06390000,  # 約 95 分鐘軌道週期
-            bstar=0.00012345,
-        )
-
-        satellite = Satellite(
-            satellite_id="STARLINK-1234",
-            name="Starlink-1234",
-            orbital_elements=orbital_elements,
-            launch_date=datetime(2021, 1, 1, tzinfo=timezone.utc),
-            is_active=True,
-        )
-
-        assert satellite.satellite_id == "STARLINK-1234"
-        assert satellite.name == "Starlink-1234"
-        assert satellite.is_active is True
-        assert satellite.launch_date.year == 2021
-        assert satellite.orbital_elements.inclination == 53.0
-
-    def test_satellite_inactive(self):
-        """測試非活躍衛星"""
-        orbital_elements = OrbitalElements(
-            epoch=datetime.now(timezone.utc),
+            epoch=datetime(2024, 1, 1),
             inclination=53.0,
-            raan=0.0,
-            eccentricity=0.0001,
-            arg_perigee=0.0,
+            raan=100.0,
+            eccentricity=0.001,
+            arg_perigee=90.0,
             mean_anomaly=0.0,
-            mean_motion=15.06390000,
-            bstar=0.00012345,
+            mean_motion=15.0
         )
-
+        
         satellite = Satellite(
-            satellite_id="STARLINK-DEAD", name="Starlink-Dead", orbital_elements=orbital_elements, is_active=False
+            satellite_id="SAT123",
+            name="Test Satellite",
+            orbital_elements=orbital_elements,
+            launch_date=datetime(2023, 1, 1),
+            is_active=True
         )
-
-        assert satellite.is_active is False
-        assert satellite.launch_date is None
+        
+        assert satellite.satellite_id == "SAT123"
+        assert satellite.name == "Test Satellite"
+        assert satellite.orbital_elements == orbital_elements
+        assert satellite.launch_date == datetime(2023, 1, 1)
+        assert satellite.is_active is True
+    
+    def test_satellite_calculate_position_not_implemented(self):
+        """測試衛星位置計算未實作"""
+        orbital_elements = OrbitalElements(
+            epoch=datetime(2024, 1, 1),
+            inclination=53.0,
+            raan=100.0,
+            eccentricity=0.001,
+            arg_perigee=90.0,
+            mean_anomaly=0.0,
+            mean_motion=15.0
+        )
+        
+        satellite = Satellite(
+            satellite_id="SAT123",
+            name="Test Satellite",
+            orbital_elements=orbital_elements
+        )
+        
+        with pytest.raises(NotImplementedError) as exc_info:
+            satellite.calculate_position_at(datetime.now())
+        
+        assert "OrbitCalculator.calculate_position" in str(exc_info.value)
+    
+    def test_satellite_equality(self):
+        """測試衛星相等性"""
+        orbital_elements = OrbitalElements(
+            epoch=datetime(2024, 1, 1),
+            inclination=53.0,
+            raan=100.0,
+            eccentricity=0.001,
+            arg_perigee=90.0,
+            mean_anomaly=0.0,
+            mean_motion=15.0
+        )
+        
+        sat1 = Satellite("SAT123", "Test 1", orbital_elements)
+        sat2 = Satellite("SAT123", "Test 2", orbital_elements)
+        sat3 = Satellite("SAT456", "Test 3", orbital_elements)
+        
+        assert sat1 == sat2  # 相同 ID
+        assert sat1 != sat3  # 不同 ID
+        assert sat1 != "not a satellite"
+    
+    def test_satellite_hash(self):
+        """測試衛星雜湊值"""
+        orbital_elements = OrbitalElements(
+            epoch=datetime(2024, 1, 1),
+            inclination=53.0,
+            raan=100.0,
+            eccentricity=0.001,
+            arg_perigee=90.0,
+            mean_anomaly=0.0,
+            mean_motion=15.0
+        )
+        
+        sat1 = Satellite("SAT123", "Test", orbital_elements)
+        sat2 = Satellite("SAT123", "Test", orbital_elements)
+        
+        assert hash(sat1) == hash(sat2)
+        
+        # 可以放入集合
+        satellite_set = {sat1, sat2}
+        assert len(satellite_set) == 1
 
 
 class TestObserver:
-    """測試觀察者實體"""
-
+    """觀測者實體測試"""
+    
     def test_observer_creation(self):
-        """測試觀察者創建"""
+        """測試觀測者建立"""
+        position = Position(latitude=25.0330, longitude=121.5654, elevation=10.0)
         observer = Observer(
-            observer_id="taipei-101", name="台北101", position=Position(latitude=25.0330, longitude=121.5654, elevation=0.0)
+            observer_id="OBS1",
+            name="Taipei Observer",
+            position=position,
+            min_elevation=25.0
         )
-
-        assert observer.name == "台北101"
-        assert observer.position.latitude == 25.0330
-        assert observer.position.longitude == 121.5654
-        assert observer.position.elevation == 0.0
-
-    def test_observer_with_altitude(self):
-        """測試有高度的觀察者"""
+        
+        assert observer.observer_id == "OBS1"
+        assert observer.name == "Taipei Observer"
+        assert observer.position == position
+        assert observer.min_elevation == 25.0
+    
+    def test_observer_default_min_elevation(self):
+        """測試預設最小仰角"""
+        position = Position(latitude=25.0330, longitude=121.5654, elevation=10.0)
         observer = Observer(
-            observer_id="yushan-station",
-            name="玉山氣象站",
-            position=Position(latitude=23.4700, longitude=120.9570, elevation=3845.0),  # 玉山高度
+            observer_id="OBS1",
+            name="Taipei Observer",
+            position=position
         )
+        
+        assert observer.min_elevation == 10.0  # 預設值
 
-        assert observer.position.elevation == 3845.0
 
-
-class TestCoverage:
-    """測試覆蓋實體"""
-
-    def test_coverage_creation(self):
-        """測試覆蓋實體創建"""
-        start_time = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        end_time = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-
-        coverage = Coverage(observer_name="台北101", start_time=start_time, end_time=end_time, elevation_mask=25.0)
-
-        assert coverage.observer_name == "台北101"
-        assert coverage.start_time == start_time
-        assert coverage.end_time == end_time
-        assert coverage.elevation_mask == 25.0
-        assert coverage.coverage_windows == []
-
-    def test_add_coverage_window(self):
-        """測試添加覆蓋視窗"""
-        coverage = Coverage(
-            observer_name="台北101",
-            start_time=datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-            end_time=datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-            elevation_mask=25.0,
+class TestCoverageAnalysis:
+    """覆蓋率分析實體測試"""
+    
+    def test_coverage_snapshot_creation(self):
+        """測試覆蓋快照建立"""
+        positions = {
+            "SAT1": Position(0, 0, 500000),
+            "SAT2": Position(10, 20, 550000)
+        }
+        
+        snapshot = CoverageSnapshot(
+            timestamp=datetime(2024, 1, 1, 12, 0, 0),
+            visible_satellites=["SAT1", "SAT2"],
+            satellite_positions=positions
         )
-
-        window = CoverageWindow(
-            satellite_id="STARLINK-1234",
-            start_time=datetime(2025, 1, 1, 1, 0, 0, tzinfo=timezone.utc),
-            end_time=datetime(2025, 1, 1, 1, 10, 0, tzinfo=timezone.utc),
-            max_elevation=45.0,
-        )
-
-        coverage.add_coverage_window(window)
-
-        assert len(coverage.coverage_windows) == 1
-        assert coverage.coverage_windows[0].satellite_id == "STARLINK-1234"
-        assert coverage.coverage_windows[0].duration_minutes == 10.0
-
-    def test_coverage_statistics(self):
-        """測試覆蓋統計"""
-        coverage = Coverage(
-            observer_name="台北101",
-            start_time=datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-            end_time=datetime(2025, 1, 1, 1, 0, 0, tzinfo=timezone.utc),  # 1小時
-            elevation_mask=25.0,
-        )
-
-        # 添加兩個覆蓋視窗
-        coverage.add_coverage_window(
-            CoverageWindow(
-                satellite_id="STARLINK-1234",
-                start_time=datetime(2025, 1, 1, 0, 10, 0, tzinfo=timezone.utc),
-                end_time=datetime(2025, 1, 1, 0, 20, 0, tzinfo=timezone.utc),
-                max_elevation=45.0,
+        
+        assert snapshot.timestamp == datetime(2024, 1, 1, 12, 0, 0)
+        assert snapshot.visible_count == 2
+        assert "SAT1" in snapshot.visible_satellites
+        assert "SAT2" in snapshot.visible_satellites
+    
+    def test_coverage_statistics_from_snapshots(self):
+        """測試從快照計算統計"""
+        snapshots = [
+            CoverageSnapshot(
+                timestamp=datetime(2024, 1, 1, 12, 0),
+                visible_satellites=["SAT1", "SAT2"],
+                satellite_positions={}
+            ),
+            CoverageSnapshot(
+                timestamp=datetime(2024, 1, 1, 12, 1),
+                visible_satellites=["SAT1", "SAT2", "SAT3"],
+                satellite_positions={}
+            ),
+            CoverageSnapshot(
+                timestamp=datetime(2024, 1, 1, 12, 2),
+                visible_satellites=["SAT2"],
+                satellite_positions={}
+            ),
+            CoverageSnapshot(
+                timestamp=datetime(2024, 1, 1, 12, 3),
+                visible_satellites=[],
+                satellite_positions={}
             )
+        ]
+        
+        stats = CoverageStatistics.from_snapshots(snapshots, 60)
+        
+        assert stats.duration_minutes == 60
+        assert stats.average_visible_count == 1.5  # (2+3+1+0)/4
+        assert stats.max_visible_count == 3
+        assert stats.min_visible_count == 0
+        assert stats.coverage_percentage == 75.0  # 3/4 * 100
+        assert stats.total_snapshots == 4
+    
+    def test_coverage_statistics_empty_snapshots(self):
+        """測試空快照的統計"""
+        stats = CoverageStatistics.from_snapshots([], 60)
+        
+        assert stats.duration_minutes == 60
+        assert stats.average_visible_count == 0.0
+        assert stats.max_visible_count == 0
+        assert stats.min_visible_count == 0
+        assert stats.coverage_percentage == 0.0
+        assert stats.total_snapshots == 0
+    
+    def test_optimal_window(self):
+        """測試最佳觀測窗口"""
+        window = OptimalWindow(
+            start_time=datetime(2024, 1, 1, 12, 0),
+            end_time=datetime(2024, 1, 1, 13, 30),
+            avg_satellites=25.5,
+            max_elevation=85.0
         )
-
-        coverage.add_coverage_window(
-            CoverageWindow(
-                satellite_id="STARLINK-5678",
-                start_time=datetime(2025, 1, 1, 0, 30, 0, tzinfo=timezone.utc),
-                end_time=datetime(2025, 1, 1, 0, 45, 0, tzinfo=timezone.utc),
-                max_elevation=60.0,
+        
+        assert window.duration_minutes == 90
+        assert window.avg_satellites == 25.5
+        assert window.max_elevation == 85.0
+    
+    def test_coverage_analysis_creation(self):
+        """測試覆蓋率分析建立"""
+        position = Position(25.0330, 121.5654, 10.0)
+        observer = Observer("OBS1", "Taipei", position)
+        
+        analysis = CoverageAnalysis(
+            observer=observer,
+            start_time=datetime(2024, 1, 1, 12, 0),
+            end_time=datetime(2024, 1, 1, 13, 0),
+            analyzed_satellites=["SAT1", "SAT2", "SAT3"]
+        )
+        
+        assert analysis.coverage_id is not None
+        assert len(analysis.coverage_id) == 36  # UUID 格式
+        assert analysis.observer == observer
+        assert analysis.start_time == datetime(2024, 1, 1, 12, 0)
+        assert analysis.end_time == datetime(2024, 1, 1, 13, 0)
+        assert len(analysis.analyzed_satellites) == 3
+    
+    def test_coverage_analysis_add_snapshot(self):
+        """測試添加快照"""
+        analysis = CoverageAnalysis()
+        
+        snapshot = CoverageSnapshot(
+            timestamp=datetime(2024, 1, 1, 12, 0),
+            visible_satellites=["SAT1"],
+            satellite_positions={}
+        )
+        
+        analysis.add_snapshot(snapshot)
+        
+        assert len(analysis.snapshots) == 1
+        assert analysis.snapshots[0] == snapshot
+    
+    def test_coverage_analysis_auto_statistics(self):
+        """測試自動計算統計"""
+        snapshots = [
+            CoverageSnapshot(
+                timestamp=datetime(2024, 1, 1, 12, 0),
+                visible_satellites=["SAT1", "SAT2"],
+                satellite_positions={}
             )
+        ]
+        
+        analysis = CoverageAnalysis(
+            start_time=datetime(2024, 1, 1, 12, 0),
+            end_time=datetime(2024, 1, 1, 13, 0),
+            snapshots=snapshots
         )
-
-        stats = coverage.get_statistics()
-
-        assert stats["total_windows"] == 2
-        assert stats["unique_satellites"] == 2
-        assert stats["total_coverage_minutes"] == 25.0  # 10 + 15 分鐘
-        assert stats["coverage_percentage"] == pytest.approx(41.67, rel=0.01)  # 25/60 * 100
-
-
-class TestCoverageWindow:
-    """測試覆蓋視窗"""
-
-    def test_coverage_window_duration(self):
-        """測試覆蓋視窗持續時間計算"""
-        window = CoverageWindow(
-            satellite_id="STARLINK-1234",
-            start_time=datetime(2025, 1, 1, 10, 30, 0, tzinfo=timezone.utc),
-            end_time=datetime(2025, 1, 1, 10, 45, 30, tzinfo=timezone.utc),
-            max_elevation=55.0,
-        )
-
-        assert window.duration_minutes == pytest.approx(15.5, rel=0.01)
-        assert window.max_elevation == 55.0
+        
+        assert analysis.statistics is not None
+        assert analysis.statistics.duration_minutes == 60
+        assert analysis.statistics.average_visible_count == 2.0

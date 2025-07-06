@@ -120,3 +120,32 @@ class NetworkConstants:
     DEFAULT_REQUEST_TIMEOUT = 30  # 秒
     MAX_REQUEST_RETRIES = 3
     RETRY_DELAY = 1  # 秒
+
+
+class RedisConstants:
+    """Redis 快取相關常量"""
+    
+    # Redis 連線設定
+    DEFAULT_HOST = "localhost"
+    DEFAULT_PORT = 6379
+    DEFAULT_DB = 0
+    DEFAULT_PASSWORD = None
+    DEFAULT_DECODE_RESPONSES = True
+    DEFAULT_MAX_CONNECTIONS = 50
+    
+    # 快取 TTL (秒)
+    SATELLITE_POSITION_TTL = 60  # 衛星位置快取 1 分鐘
+    COVERAGE_ANALYSIS_TTL = 300  # 覆蓋率分析快取 5 分鐘
+    SATELLITE_DATA_TTL = 3600  # 衛星資料快取 1 小時
+    OPTIMAL_WINDOW_TTL = 1800  # 最佳觀測窗口快取 30 分鐘
+    
+    # 快取鍵前綴
+    KEY_PREFIX = "starlink_taipei:"
+    SATELLITE_PREFIX = f"{KEY_PREFIX}satellite:"
+    POSITION_PREFIX = f"{KEY_PREFIX}position:"
+    COVERAGE_PREFIX = f"{KEY_PREFIX}coverage:"
+    WINDOW_PREFIX = f"{KEY_PREFIX}window:"
+    
+    # 快取大小限制
+    MAX_CACHED_POSITIONS = 10000
+    MAX_CACHED_ANALYSES = 100

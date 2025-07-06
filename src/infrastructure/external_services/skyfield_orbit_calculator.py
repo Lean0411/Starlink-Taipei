@@ -3,7 +3,10 @@
 """
 
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from skyfield.api import EarthSatellite
 
 try:
     from skyfield.api import EarthSatellite, load, wgs84
@@ -11,6 +14,7 @@ try:
     SKYFIELD_AVAILABLE = True
 except ImportError:
     SKYFIELD_AVAILABLE = False
+    EarthSatellite = None  # 定義為 None 以避免 NameError
 
 from ...domain.entities.satellite import Satellite
 from ...domain.services.orbit_calculator import OrbitCalculator
@@ -32,7 +36,7 @@ class SkyfieldOrbitCalculator(OrbitCalculator):
         self.ts = load.timescale()
         self._satellite_cache: Dict[str, EarthSatellite] = {}
 
-    def _get_skyfield_satellite(self, satellite: Satellite) -> EarthSatellite:
+    def _get_skyfield_satellite(self, satellite: Satellite) -> "EarthSatellite":
         """獲取或創建 Skyfield 衛星物件
 
         Args:
