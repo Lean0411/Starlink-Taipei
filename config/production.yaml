@@ -1,0 +1,23 @@
+# 生產環境配置
+# 繼承 base.yaml 並覆蓋特定設定
+
+app:
+  debug: false
+
+logging:
+  level: "WARNING"
+  # 生產環境可能需要不同的日誌路徑
+  file: "/var/log/starlink-taipei/app.log"
+
+api:
+  # 生產環境可能需要特定的主機設定
+  host: "0.0.0.0"
+  port: 80
+  cors:
+    # 生產環境應該限制 CORS 來源
+    allow_origins: ["https://starlink-taipei.com"]
+    
+satellite:
+  celestrak:
+    # 生產環境使用較長的快取時間
+    cache_duration_hours: 48

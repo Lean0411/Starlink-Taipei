@@ -7,17 +7,12 @@
 衛星分析模組的單元測試
 """
 
-import os
-import sys
 from datetime import timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# 添加專案根目錄到 Python 路徑
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-
-from satellite_analysis import TAIPEI_LAT  # noqa: E402
+from satellite_analysis import TAIPEI_LAT
 from satellite_analysis import (
     ELEVATION,
     TAIPEI_LON,

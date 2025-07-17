@@ -27,13 +27,22 @@ def test_python_version():
 def test_project_files_exist():
     """測試專案檔案存在"""
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
+
     # 檢查重要檔案存在
-    assert os.path.exists(os.path.join(project_root, "satellite_analysis.py"))
-    assert os.path.exists(os.path.join(project_root, "starlink.py"))
-    assert os.path.exists(os.path.join(project_root, "simple_analysis.py"))
     assert os.path.exists(os.path.join(project_root, "README.md"))
     assert os.path.exists(os.path.join(project_root, ".github", "workflows", "test.yml"))
+    
+    # 檢查新的 Clean Architecture 目錄結構
+    assert os.path.exists(os.path.join(project_root, "src"))
+    assert os.path.exists(os.path.join(project_root, "src", "domain"))
+    assert os.path.exists(os.path.join(project_root, "src", "application"))
+    assert os.path.exists(os.path.join(project_root, "src", "infrastructure"))
+    assert os.path.exists(os.path.join(project_root, "src", "interfaces"))
+    
+    # 檢查舊檔案在 legacy 目錄中
+    assert os.path.exists(os.path.join(project_root, "legacy", "python", "satellite_analysis.py"))
+    assert os.path.exists(os.path.join(project_root, "legacy", "python", "starlink.py"))
+    assert os.path.exists(os.path.join(project_root, "legacy", "python", "simple_analysis.py"))
 
 
 def test_environment():
@@ -41,8 +50,9 @@ def test_environment():
     # 測試基本環境
     assert "PATH" in os.environ
     assert os.path.exists(sys.executable)
-    
+
     # 測試 Python 可執行
     import subprocess
+
     result = subprocess.run([sys.executable, "--version"], capture_output=True)
     assert result.returncode == 0
